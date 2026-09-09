@@ -78,6 +78,7 @@ class HospedeModel(Base):
     telefone = Column(String(20), nullable=False)
     data_nascimento = Column(Date, nullable=False)
     observacoes = Column(Text, nullable=True)
+    is_ativo = Column(Integer, nullable=False, default=1)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

@@ -362,37 +362,54 @@ def cadastrar_hospede(
                 }
             }
         )
+    # 3. Criação da entidade ORM e Persistência no Banco
+    try:
+        novo_hospede = HospedeModel(
+            uuid_publico=str(uuid.uuid4()),
+            nome=payload.nome.strip(),
+            email=payload.email.lower().strip(),
+            cpf=payload.cpf.strip(),
+            telefone=payload.telefone.strip(),
+            data_nascimento=payload.data_nascimento,
+            observacoes=payload.observacoes.strip() if payload.observacoes else None,
+            is_ativo=1
+        )
+        db.add(novo_hospede)
+        db.commit()
+        db.refresh(novo_hospede)
+    except Exception as e:
+        db.rollback()
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "error": {
+                    "code": "DB_PERSISTENCE_ERROR",
+                    "message": f"Erro ao gravar hóspede no banco de dados: {str(e)}"
+                }
+            }
+        )
 
-    # 3. Criação da entidade ORM (Prepared Statements automáticos pelo SQLAlchemy)
-    novo_hospede = HospedeModel(
-        uuid_publico=str(uuid.uuid4()),
-        nome=payload.nome,
-        email=payload.email.lower(),
-        cpf=payload.cpf,
-        telefone=payload.telefone,
-        data_nascimento=payload.data_nascimento,
-        observacoes=payload.observacoes
-    )
-    db.add(novo_hospede)
-    db.flush() # Obtém o ID gerado na transação sem comitar ainda
-
-    # 4. Trilha de Auditoria LGPD (RN-05)
-    log_cadastro = AuditLogModel(
-        id_operador=operador.id if operador else None,
-        acao="CADASTRO_HOSPEDE",
-        tabela_afetada="tb_hospedes",
-        registro_id=novo_hospede.id,
-        dados_novos=json.dumps({
-            "uuid": novo_hospede.uuid_publico,
-            "nome": novo_hospede.nome,
-            "email": novo_hospede.email,
-            "cpf": novo_hospede.cpf
-        }),
-        ip_origem=request.client.host if request.client else "unknown"
-    )
-    db.add(log_cadastro)
-    db.commit() # Efetivação atômica ACID no banco relacional
-    db.refresh(novo_hospede)
+    # 4. Trilha de Auditoria LGPD (RN-05) - Defensiva
+    try:
+        log_cadastro = AuditLogModel(
+            id_operador=operador.id if operador else None,
+            acao="CADASTRO_HOSPEDE",
+            tabela_afetada="tb_hospedes",
+            registro_id=novo_hospede.id,
+            dados_novos=json.dumps({
+                "uuid": novo_hospede.uuid_publico,
+                "nome": novo_hospede.nome,
+                "email": novo_hospede.email,
+                "cpf_mascarado": f"***.{novo_hospede.cpf[3:6]}.{novo_hospede.cpf[6:9]}-**"
+            }),
+            ip_origem=request.client.host if request.client else "unknown"
+        )
+        db.add(log_cadastro)
+        db.commit()
+    except Exception as log_err:
+        db.rollback()
+        print(f"[AUDIT WARNING] Não foi possível gravar log de auditoria: {log_err}")
 
     return {
         "success": True,
