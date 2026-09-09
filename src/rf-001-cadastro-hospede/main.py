@@ -35,7 +35,7 @@ from fastapi.exceptions import RequestValidationError
 from sqlalchemy.orm import Session
 
 # Importações internas do backend
-from database import get_db, engine, Base
+from database import get_db, engine, Base, DB_DIAGNOSTICS
 from models import OperadorModel, SessaoModel, HospedeModel, AuditLogModel
 from schemas import (
     LoginSchema, 
@@ -331,6 +331,21 @@ def me(operador: Optional[OperadorModel] = Depends(obter_operador_autenticado)):
             "nome": operador.nome,
             "email": operador.email,
             "cargo": operador.cargo
+        }
+    }
+
+
+@app.get("/api/v1/health", summary="Status do Sistema e Banco de Dados", tags=["Sistema"])
+def health_check():
+    """
+    Retorna o diagnóstico de conectividade com o banco de dados (Supabase vs Fallback).
+    """
+    return {
+        "success": True,
+        "data": {
+            "status": "online",
+            "database": DB_DIAGNOSTICS,
+            "timestamp": datetime.utcnow().isoformat()
         }
     }
 

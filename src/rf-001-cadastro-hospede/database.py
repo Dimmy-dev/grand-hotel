@@ -44,13 +44,22 @@ DB_FILE_PATH = CURRENT_DIR / "hotel_grand_plaza.db"
 DDL_FILE_PATH = PROJECT_ROOT / "database" / "ddl" / "rf-001-hospedes-ddl.sql"
 SEEDS_FILE_PATH = PROJECT_ROOT / "database" / "seeds" / "hospedes-seeds.sql"
 
+DB_DIAGNOSTICS = {
+    "engine_type": "unknown",
+    "supabase_connected": False,
+    "error": None,
+    "database_url_configured": False
+}
+
 def obter_engine():
     """
     Cria e retorna a engine do SQLAlchemy com fallback automático.
     - Primário: DATABASE_URL (Supabase PostgreSQL via PgBouncer na nuvem)
     - Fallback: SQLite local (hotel_grand_plaza.db)
     """
+    global DB_DIAGNOSTICS
     database_url = os.getenv("DATABASE_URL")
+    DB_DIAGNOSTICS["database_url_configured"] = bool(database_url)
     
     # 1. Tentativa de conexão primária com o Supabase (PostgreSQL)
     if database_url:
@@ -74,9 +83,13 @@ def obter_engine():
                 with engine.connect() as conn:
                     conn.execute(text("SELECT 1"))
                 logger.info("Conexão com Supabase PostgreSQL estabelecida com sucesso! [PRODUÇÃO EM NUVEM ATIVA]")
+                DB_DIAGNOSTICS["engine_type"] = "Supabase PostgreSQL"
+                DB_DIAGNOSTICS["supabase_connected"] = True
+                DB_DIAGNOSTICS["error"] = None
                 return engine
             except Exception as e:
                 logger.warning(f"Falha ao conectar com o Supabase ({e}). Ativando fallback de resiliência local...")
+                DB_DIAGNOSTICS["error"] = str(e)
     
     # 2. Fallback de Resiliência: SQLite local
     # Em ambiente Serverless (Vercel/Lambda), o diretório da aplicação é read-only; usamos /tmp
@@ -88,6 +101,8 @@ def obter_engine():
 
     sqlite_url = f"sqlite:///{sqlite_path}"
     logger.info(f"Conectando ao banco relacional local SQLite: {sqlite_path}")
+    DB_DIAGNOSTICS["engine_type"] = f"SQLite Fallback ({'Serverless /tmp' if is_serverless else 'Local DB'})"
+    DB_DIAGNOSTICS["supabase_connected"] = False
     
     engine = create_engine(
         sqlite_url,
