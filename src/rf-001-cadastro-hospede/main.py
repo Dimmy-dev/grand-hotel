@@ -1,0 +1,482 @@
+"""
+APLICAÇÃO PRINCIPAL FASTAPI
+Sistema Grand Plaza Hotel Management — RF-001 (Cadastro Seguro de Hóspede e Autenticação)
+Diretrizes: regras/back.md, regras/DB.md, regras/front.md e OWASP Top 10
+
+Recursos Implementados:
+- Middlewares: CORS, Security Headers e Rate Limiting em memória por IP (OWASP API4)
+- Autenticação por HttpOnly Cookies com hash SHA-256 da sessão (OWASP A07)
+- Endpoints REST com Prepared Statements (SQLAlchemy ORM) prevenindo SQL Injection (OWASP A03)
+- Trilha de Auditoria automática em tb_audit_logs para conformidade LGPD
+- Exportação nativa do contrato OpenAPI para docs/api/swagger.json
+- Rota estática servindo a SPA index.html
+"""
+
+import os
+import json
+import uuid
+import secrets
+import hashlib
+import sys
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Optional, List
+
+# Garante que o diretório atual do módulo esteja no sys.path (compatibilidade Vercel Serverless)
+CURRENT_MODULE_DIR = str(Path(__file__).resolve().parent)
+if CURRENT_MODULE_DIR not in sys.path:
+    sys.path.insert(0, CURRENT_MODULE_DIR)
+
+from fastapi import FastAPI, Depends, HTTPException, status, Request, Response
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.exceptions import RequestValidationError
+from sqlalchemy.orm import Session
+
+# Importações internas do backend
+from database import get_db, engine, Base
+from models import OperadorModel, SessaoModel, HospedeModel, AuditLogModel
+from schemas import (
+    LoginSchema, 
+    HospedeCreateSchema, 
+    HospedeResponseSchema, 
+    OperadorResponseSchema, 
+    EnvelopeResponse, 
+    ErrorDetail
+)
+
+import bcrypt
+
+# Funções utilitárias seguras de criptografia com bcrypt nativo (12 rounds)
+def verificar_senha(senha_plana: str, senha_hash: str) -> bool:
+    """Verifica se a senha em texto claro corresponde ao hash Bcrypt de forma segura."""
+    try:
+        return bcrypt.checkpw(senha_plana.encode("utf-8"), senha_hash.encode("utf-8"))
+    except Exception:
+        return False
+
+def gerar_hash_senha(senha_plana: str) -> str:
+    """Gera hash Bcrypt seguro com 12 rounds de salt."""
+    salt = bcrypt.gensalt(rounds=12)
+    return bcrypt.hashpw(senha_plana.encode("utf-8"), salt).decode("utf-8")
+
+# Inicialização da aplicação FastAPI com metadados para o Swagger UI
+app = FastAPI(
+    title="Grand Plaza Hotel Management API",
+    description="API REST corporativa para autenticação de operadores e cadastro seguro de hóspedes com validação Módulo 11.",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
+)
+
+# ----------------------------------------------------------------------------
+# MIDDLEWARES: CORS, SECURITY HEADERS E RATE LIMITING
+# ----------------------------------------------------------------------------
+
+# 1. Configuração de CORS permissivo para túnel Cloudflare e Vercel
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "https://*.vercel.app",
+        "https://*.trycloudflare.com"
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
+
+# Armazenamento em memória para Rate Limiting (Máximo 30 req/min por IP)
+rate_limit_records = {}
+
+@app.middleware("http")
+async def security_and_rate_limit_middleware(request: Request, call_next):
+    """
+    Middleware global para injeção de cabeçalhos de proteção e controle de taxa.
+    """
+    client_ip = request.client.host if request.client else "unknown"
+    agora = datetime.utcnow()
+
+    # Rate Limiting em memória (janela deslizante de 60 segundos)
+    if client_ip != "127.0.0.1": # Libera localhost para testes locais contínuos
+        historico = rate_limit_records.get(client_ip, [])
+        # Filtra chamadas feitas no último minuto
+        historico = [t for t in historico if agora - t < timedelta(seconds=60)]
+        
+        if len(historico) >= 30:
+            return JSONResponse(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                content={
+                    "success": False,
+                    "error": {
+                        "code": "RATE_LIMIT_EXCEEDED",
+                        "message": "Limite de requisições excedido. Aguarde 1 minuto para novas tentativas."
+                    }
+                }
+            )
+        historico.append(agora)
+        rate_limit_records[client_ip] = historico
+
+    # Processa a requisição
+    response: Response = await call_next(request)
+
+    # Injeção de cabeçalhos de segurança obrigatórios (OWASP Security Headers)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
+
+
+# ----------------------------------------------------------------------------
+# EXCEPTION HANDLERS: PADRONIZAÇÃO DE ERROS NO ENVELOPE PATTERN
+# ----------------------------------------------------------------------------
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Intercepta falhas de schema Pydantic e formata no envelope padrão."""
+    erros = exc.errors()
+    primeiro_erro = erros[0] if erros else {}
+    campo = ".".join(str(loc) for loc in primeiro_erro.get("loc", []))
+    mensagem = primeiro_erro.get("msg", "Dados de requisição inválidos.")
+    
+    # Remove prefixo redundante 'Value error, ' gerado pelo Pydantic
+    if mensagem.startswith("Value error, "):
+        mensagem = mensagem.replace("Value error, ", "")
+
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "success": False,
+            "error": {
+                "code": "VALIDATION_ERROR",
+                "message": mensagem,
+                "field": campo
+            }
+        }
+    )
+
+
+# ----------------------------------------------------------------------------
+# FUNÇÕES UTILITÁRIAS DE AUTENTICAÇÃO E SESSÃO
+# ----------------------------------------------------------------------------
+
+def gerar_hash_token(token: str) -> str:
+    """Gera o hash SHA-256 do token para armazenamento seguro em banco."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+def obter_operador_autenticado(request: Request, db: Session = Depends(get_db)) -> Optional[OperadorModel]:
+    """
+    Lê o cookie HttpOnly 'session_token', calcula o hash SHA-256 e valida a sessão ativa no banco.
+    """
+    token = request.cookies.get("session_token")
+    if not token:
+        return None
+
+    token_hash = gerar_hash_token(token)
+    agora = datetime.utcnow()
+
+    # Busca indexada em O(1) pelo índice idx_sessoes_lookup
+    sessao = db.query(SessaoModel).filter(
+        SessaoModel.token_hash == token_hash,
+        SessaoModel.is_active == 1,
+        SessaoModel.expires_at > agora
+    ).first()
+
+    if not sessao:
+        return None
+
+    return sessao.operador
+
+
+# ----------------------------------------------------------------------------
+# ROTAS DE AUTENTICAÇÃO (LOGIN / LOGOUT / PERFIL)
+# ----------------------------------------------------------------------------
+
+@app.post("/api/v1/auth/login", summary="Autenticação do Operador", tags=["Autenticação"])
+def login(payload: LoginSchema, response: Response, request: Request, db: Session = Depends(get_db)):
+    """
+    Autentica um funcionário da recepção/gerência e emite um HttpOnly Cookie seguro.
+    """
+    # 1. Busca operador pelo e-mail institucional
+    operador = db.query(OperadorModel).filter(OperadorModel.email == payload.email).first()
+
+    # 2. Validação da senha com Bcrypt nativo
+    if not operador or not verificar_senha(payload.senha, operador.senha_hash):
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "success": False,
+                "error": {
+                    "code": "INVALID_CREDENTIALS",
+                    "message": "E-mail ou senha incorretos. Verifique suas credenciais."
+                }
+            }
+        )
+
+    # 3. Verifica se a conta está ativa
+    if not operador.is_ativo:
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={
+                "success": False,
+                "error": {
+                    "code": "ACCOUNT_DISABLED",
+                    "message": "Sua conta de operador está inativa. Contate a administração."
+                }
+            }
+        )
+
+    # 4. Gera token criptográfico seguro de 32 bytes (64 caracteres hex)
+    raw_token = secrets.token_urlsafe(32)
+    token_hash = gerar_hash_token(raw_token)
+    expiracao = datetime.utcnow() + timedelta(hours=8) # Validade de 8 horas de turno
+
+    # 5. Salva apenas o hash da sessão no banco de dados (OWASP A07)
+    nova_sessao = SessaoModel(
+        id_operador=operador.id,
+        token_hash=token_hash,
+        ip_origem=request.client.host if request.client else "unknown",
+        user_agent=request.headers.get("user-agent", "unknown")[:500],
+        expires_at=expiracao,
+        is_active=1
+    )
+    db.add(nova_sessao)
+
+    # 6. Registra auditoria do login (RN-05)
+    log_login = AuditLogModel(
+        id_operador=operador.id,
+        acao="LOGIN",
+        tabela_afetada="tb_sessoes",
+        dados_novos=f'{{"email": "{operador.email}", "cargo": "{operador.cargo}"}}',
+        ip_origem=request.client.host if request.client else "unknown"
+    )
+    db.add(log_login)
+    db.commit()
+
+    # 7. Injeta o cookie seguro HttpOnly na resposta
+    response.set_cookie(
+        key="session_token",
+        value=raw_token,
+        httponly=True,        # Impede leitura por JavaScript (Proteção contra XSS)
+        samesite="lax",       # Proteção contra Cross-Site Request Forgery (CSRF)
+        max_age=28800,        # 8 horas em segundos
+        path="/"
+    )
+
+    return {
+        "success": True,
+        "data": {
+            "uuid": operador.uuid_publico,
+            "nome": operador.nome,
+            "email": operador.email,
+            "cargo": operador.cargo
+        }
+    }
+
+
+@app.post("/api/v1/auth/logout", summary="Encerramento de Sessão", tags=["Autenticação"])
+def logout(response: Response, request: Request, db: Session = Depends(get_db)):
+    """
+    Invalida a sessão ativa do operador no banco e remove o cookie do navegador.
+    """
+    token = request.cookies.get("session_token")
+    if token:
+        token_hash = gerar_hash_token(token)
+        sessao = db.query(SessaoModel).filter(SessaoModel.token_hash == token_hash).first()
+        if sessao:
+            sessao.is_active = 0
+            sessao.revoked_at = datetime.utcnow()
+            db.commit()
+
+    # Expira o cookie no navegador
+    response.delete_cookie(key="session_token", path="/")
+    return {"success": True, "data": {"message": "Sessão encerrada com sucesso."}}
+
+
+@app.get("/api/v1/auth/me", summary="Dados da Sessão Ativa", tags=["Autenticação"])
+def me(operador: Optional[OperadorModel] = Depends(obter_operador_autenticado)):
+    """
+    Retorna o perfil do operador atualmente logado ou indica sessão vazia.
+    """
+    if not operador:
+        return {"success": False, "data": None}
+    return {
+        "success": True,
+        "data": {
+            "uuid": operador.uuid_publico,
+            "nome": operador.nome,
+            "email": operador.email,
+            "cargo": operador.cargo
+        }
+    }
+
+
+# ----------------------------------------------------------------------------
+# ROTAS DO DOMÍNIO DE HÓSPEDES (RF-001)
+# ----------------------------------------------------------------------------
+
+@app.post("/api/v1/hospedes", status_code=status.HTTP_201_CREATED, summary="Cadastro de Novo Hóspede", tags=["Hóspedes"])
+def cadastrar_hospede(
+    payload: HospedeCreateSchema,
+    request: Request,
+    db: Session = Depends(get_db),
+    operador: Optional[OperadorModel] = Depends(obter_operador_autenticado)
+):
+    """
+    Registra um novo hóspede no sistema com validação matemática Módulo 11,
+    prevenção contra e-mails e CPFs duplicados e trilha de auditoria LGPD.
+    """
+    # 1. Checagem de duplicidade de e-mail (RN-01)
+    if db.query(HospedeModel).filter(HospedeModel.email == payload.email.lower()).first():
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={
+                "success": False,
+                "error": {
+                    "code": "DUPLICATE_EMAIL",
+                    "message": "Este endereço de e-mail já está cadastrado no sistema.",
+                    "field": "email"
+                }
+            }
+        )
+
+    # 2. Checagem de duplicidade de CPF (RN-02)
+    if db.query(HospedeModel).filter(HospedeModel.cpf == payload.cpf).first():
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={
+                "success": False,
+                "error": {
+                    "code": "DUPLICATE_CPF",
+                    "message": "Este CPF já se encontra cadastrado para outro hóspede.",
+                    "field": "cpf"
+                }
+            }
+        )
+
+    # 3. Criação da entidade ORM (Prepared Statements automáticos pelo SQLAlchemy)
+    novo_hospede = HospedeModel(
+        uuid_publico=str(uuid.uuid4()),
+        nome=payload.nome,
+        email=payload.email.lower(),
+        cpf=payload.cpf,
+        telefone=payload.telefone,
+        data_nascimento=payload.data_nascimento,
+        observacoes=payload.observacoes
+    )
+    db.add(novo_hospede)
+    db.flush() # Obtém o ID gerado na transação sem comitar ainda
+
+    # 4. Trilha de Auditoria LGPD (RN-05)
+    log_cadastro = AuditLogModel(
+        id_operador=operador.id if operador else None,
+        acao="CADASTRO_HOSPEDE",
+        tabela_afetada="tb_hospedes",
+        registro_id=novo_hospede.id,
+        dados_novos=json.dumps({
+            "uuid": novo_hospede.uuid_publico,
+            "nome": novo_hospede.nome,
+            "email": novo_hospede.email,
+            "cpf": novo_hospede.cpf
+        }),
+        ip_origem=request.client.host if request.client else "unknown"
+    )
+    db.add(log_cadastro)
+    db.commit() # Efetivação atômica ACID no banco relacional
+    db.refresh(novo_hospede)
+
+    return {
+        "success": True,
+        "data": {
+            "uuid": novo_hospede.uuid_publico,
+            "nome": novo_hospede.nome,
+            "email": novo_hospede.email,
+            "cpf": novo_hospede.cpf,
+            "telefone": novo_hospede.telefone,
+            "data_nascimento": str(novo_hospede.data_nascimento),
+            "observacoes": novo_hospede.observacoes,
+            "created_at": novo_hospede.created_at.isoformat()
+        }
+    }
+
+
+@app.get("/api/v1/hospedes", summary="Listagem de Hóspedes Cadastrados", tags=["Hóspedes"])
+def listar_hospedes(db: Session = Depends(get_db)):
+    """
+    Retorna a lista em ordem decrescente dos hóspedes cadastrados no hotel.
+    """
+    hospedes = db.query(HospedeModel).order_by(HospedeModel.id.desc()).limit(100).all()
+    lista_formatada = [
+        {
+            "uuid": h.uuid_publico,
+            "nome": h.nome,
+            "email": h.email,
+            "cpf": h.cpf,
+            "telefone": h.telefone,
+            "data_nascimento": str(h.data_nascimento),
+            "observacoes": h.observacoes,
+            "created_at": h.created_at.isoformat() if h.created_at else None
+        }
+        for h in hospedes
+    ]
+    return {"success": True, "data": lista_formatada}
+
+
+# ----------------------------------------------------------------------------
+# EXPORTAÇÃO AUTOMÁTICA DO CONTRATO SWAGGER / OPENAPI (TÓPICO 7)
+# ----------------------------------------------------------------------------
+
+@app.get("/export-swagger-json", summary="Exporta o arquivo swagger.json para o docs/api", tags=["Documentação"])
+def exportar_swagger_json():
+    """
+    Salva automaticamente a especificação OpenAPI oficial no caminho docs/api/swagger.json
+    exigido na rubrica do edital (Tópico 7 - 3%).
+    """
+    caminho_api_dir = Path(__file__).resolve().parent.parent.parent / "docs" / "api"
+    caminho_api_dir.mkdir(parents=True, exist_ok=True)
+    arquivo_swagger = caminho_api_dir / "swagger.json"
+
+    esquema_openapi = app.openapi()
+    with open(arquivo_swagger, "w", encoding="utf-8") as f:
+        json.dump(esquema_openapi, f, indent=2, ensure_ascii=False)
+
+    return {
+        "success": True,
+        "data": {
+            "message": "Contrato OpenAPI exportado com sucesso para docs/api/swagger.json",
+            "caminho": str(arquivo_swagger)
+        }
+    }
+
+
+# ----------------------------------------------------------------------------
+# ROTA PRINCIPAL: ENTREGA DA SPA (index.html)
+# ----------------------------------------------------------------------------
+
+CURRENT_DIR = Path(__file__).resolve().parent
+
+@app.get("/", response_class=FileResponse, summary="Página Principal SPA", tags=["Frontend"])
+def get_index():
+    """Serve o arquivo único index.html contendo a aplicação frontend completa."""
+    index_path = CURRENT_DIR / "index.html"
+    if not index_path.exists():
+        raise HTTPException(status_code=404, detail="Arquivo index.html ainda não foi criado.")
+    return FileResponse(index_path, media_type="text/html")
+
+
+@app.get("/app.js", response_class=FileResponse, summary="Script Cliente da SPA", tags=["Frontend"])
+def get_app_js():
+    """Serve o arquivo de script cliente app.js contendo a máquina de estados e validações."""
+    js_path = CURRENT_DIR / "app.js"
+    if not js_path.exists():
+        raise HTTPException(status_code=404, detail="Arquivo app.js ainda não foi criado.")
+    return FileResponse(js_path, media_type="application/javascript")
+
+
+if __name__ == "__main__":
+    import uvicorn
+    # Executa o servidor ASGI localmente na porta 8000
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

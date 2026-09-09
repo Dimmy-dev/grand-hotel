@@ -1,0 +1,29 @@
+# Ambientes Virtuais e Dependências
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+node_modules/
+
+# Arquivos de Senhas, Segredos e Variáveis de Ambiente
+.env
+.env.*
+regras/senhas.md
+senhas.md
+
+# IDE e Sistema Operacional
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Bancos de dados gerados localmente em runtime
+*.db-journal
+
+# Pacotes compactados e metadados internos
+*.zip
+.agents/

@@ -1,0 +1,330 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Grand Plaza Hotel Management API",
+    "description": "API REST corporativa para autenticação de operadores e cadastro seguro de hóspedes com validação Módulo 11.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Autenticação do Operador",
+        "description": "Autentica um funcionário da recepção/gerência e emite um HttpOnly Cookie seguro.",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Encerramento de Sessão",
+        "description": "Invalida a sessão ativa do operador no banco e remove o cookie do navegador.",
+        "operationId": "logout_api_v1_auth_logout_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Dados da Sessão Ativa",
+        "description": "Retorna o perfil do operador atualmente logado ou indica sessão vazia.",
+        "operationId": "me_api_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hospedes": {
+      "get": {
+        "tags": [
+          "Hóspedes"
+        ],
+        "summary": "Listagem de Hóspedes Cadastrados",
+        "description": "Retorna a lista em ordem decrescente dos hóspedes cadastrados no hotel.",
+        "operationId": "listar_hospedes_api_v1_hospedes_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Hóspedes"
+        ],
+        "summary": "Cadastro de Novo Hóspede",
+        "description": "Registra um novo hóspede no sistema com validação matemática Módulo 11,\nprevenção contra e-mails e CPFs duplicados e trilha de auditoria LGPD.",
+        "operationId": "cadastrar_hospede_api_v1_hospedes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HospedeCreateSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/export-swagger-json": {
+      "get": {
+        "tags": [
+          "Documentação"
+        ],
+        "summary": "Exporta o arquivo swagger.json para o docs/api",
+        "description": "Salva automaticamente a especificação OpenAPI oficial no caminho docs/api/swagger.json\nexigido na rubrica do edital (Tópico 7 - 3%).",
+        "operationId": "exportar_swagger_json_export_swagger_json_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Página Principal SPA",
+        "description": "Serve o arquivo único index.html contendo a aplicação frontend completa.",
+        "operationId": "get_index__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        }
+      }
+    },
+    "/app.js": {
+      "get": {
+        "tags": [
+          "Frontend"
+        ],
+        "summary": "Script Cliente da SPA",
+        "description": "Serve o arquivo de script cliente app.js contendo a máquina de estados e validações.",
+        "operationId": "get_app_js_app_js_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HospedeCreateSchema": {
+        "properties": {
+          "nome": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 3,
+            "title": "Nome",
+            "description": "Nome completo do hóspede"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "E-mail corporativo ou pessoal válido (RFC 5322)"
+          },
+          "cpf": {
+            "type": "string",
+            "title": "Cpf",
+            "description": "CPF válido de 11 dígitos numéricos com ou sem pontuação"
+          },
+          "telefone": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 10,
+            "title": "Telefone",
+            "description": "Telefone com código de área (DDD)"
+          },
+          "data_nascimento": {
+            "type": "string",
+            "format": "date",
+            "title": "Data Nascimento",
+            "description": "Data de nascimento no formato AAAA-MM-DD"
+          },
+          "observacoes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observacoes",
+            "description": "Observações opcionais ou preferências de quarto"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nome",
+          "email",
+          "cpf",
+          "telefone",
+          "data_nascimento"
+        ],
+        "title": "HospedeCreateSchema",
+        "description": "Payload de entrada para o cadastro de hóspedes (RF-001).\nContém validação algorítmica e sanitização anti-XSS."
+      },
+      "LoginSchema": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "E-mail institucional do operador"
+          },
+          "senha": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 6,
+            "title": "Senha",
+            "description": "Senha de acesso em texto puro para conferência do hash"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "senha"
+        ],
+        "title": "LoginSchema",
+        "description": "Payload de entrada para o endpoint de autenticação do operador."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

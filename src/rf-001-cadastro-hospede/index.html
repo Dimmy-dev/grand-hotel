@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grand Plaza Hotel Management — Gestão de Hóspedes</title>
+  
+  <!-- ==================================================================== -->
+  <!-- ESTILOS CSS EMBUTIDOS (DESIGN SYSTEM ANTISSLOP + BASELINE UI)         -->
+  <!-- DIRETRIZES: regras/front.md (Paleta Slate, Acento Navy, Zero Emojis)  -->
+  <!-- ==================================================================== -->
+  <style>
+    /* --- 1. DESIGN TOKENS OFICIAIS (VARIÁVEIS CSS) --- */
+    :root {
+      --bg-app: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-subtle: #f1f5f9;
+
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-placeholder: #94a3b8;
+
+      --brand-navy: #1e3a8a;
+      --brand-navy-hover: #1e40af;
+      --brand-focus-ring: rgba(30, 58, 138, 0.18);
+
+      --color-success-bg: #f0fdf4;
+      --color-success-border: #86efac;
+      --color-success-text: #166534;
+
+      --color-error-bg: #fef2f2;
+      --color-error-border: #dc2626;
+      --color-error-text: #b91c1c;
+
+      --border-subtle: #cbd5e1;
+      --border-hover: #94a3b8;
+
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 14px;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+      --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-float: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+
+      --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* --- 2. RESET E TIPOGRAFIA BASE --- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* --- 3. CABEÇALHO INSTITUCIONAL --- */
+    .app-header {
+      background-color: var(--brand-navy);
+      color: #ffffff;
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-icon {
+      width: 22px;
+      height: 22px;
+      stroke: #ffffff;
+    }
+
+    .operator-bar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.875rem;
+    }
+
+    .btn-logout {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+      padding: 0.35rem 0.75rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: background var(--transition-fast);
+    }
+
+    .btn-logout:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* --- 4. ESTRUTURA DO CONTAINER PRINCIPAL --- */
+    .main-container {
+      max-width: 1080px;
+      width: 100%;
+      margin: 2rem auto;
+      padding: 0 1.25rem;
+      flex: 1;
+    }
+
+    /* --- 5. VISÃO 1: TELA DE LOGIN (SPA) --- */
+    #view-login {
+      max-width: 440px;
+      margin: 3rem auto;
+      background: var(--bg-surface);
+      border-radius: var(--radius-lg);
+      padding: 2.25rem;
+      box-shadow: var(--shadow-float);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 1.75rem;
+    }
+
+    .login-header h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--brand-navy);
+      margin-top: 0.5rem;
+    }
+
+    .login-header p {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    /* --- 6. VISÃO 2: TELA DA APLICAÇÃO / HÓSPEDES --- */
+    #view-app {
+      display: none; /* Controlado via JavaScript após autenticação */
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* --- 7. CARTÕES E FORMULÁRIOS --- */
+    .card {
+      background: var(--bg-surface);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-card);
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-subtitle {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.15rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .form-control {
+      height: 42px;
+      padding: 0 0.85rem;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      background-color: #ffffff;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+      width: 100%;
+    }
+
+    textarea.form-control {
+      height: auto;
+      padding: 0.6rem 0.85rem;
+      resize: vertical;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--brand-navy);
+      box-shadow: 0 0 0 3px var(--brand-focus-ring);
+    }
+
+    /* --- 8. ESTADOS DE VALIDAÇÃO VISUAL (BORDAS E FEEDBACKS) --- */
+    .form-control.is-invalid {
+      border-color: var(--color-error-border) !important;
+      background-color: var(--color-error-bg);
+    }
+
+    .form-control.is-valid {
+      border-color: #16a34a !important;
+      background-color: #f0fdf4;
+    }
+
+    .error-feedback {
+      color: var(--color-error-text);
+      font-size: 0.775rem;
+      display: none;
+      align-items: center;
+      gap: 0.35rem;
+      margin-top: 0.2rem;
+    }
+
+    /* --- 9. BOTÕES DE AÇÃO --- */
+    .btn {
+      height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0 1.25rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background var(--transition-fast), transform var(--transition-fast);
+      border: none;
+    }
+
+    .btn-primary {
+      background-color: var(--brand-navy);
+      color: #ffffff;
+      width: 100%;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background-color: var(--brand-navy-hover);
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-subtle);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background-color: #e2e8f0;
+    }
+
+    .btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    /* --- 10. ESTADO 3: LOADING SPINNER --- */
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 700ms linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* --- 11. ESTADO 5: CARD DE SUCESSO (CONFIRMAÇÃO) --- */
+    .alert-success-card {
+      background-color: var(--color-success-bg);
+      border: 1px solid var(--color-success-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+      display: none;
+      animation: fadeIn 200ms ease;
+    }
+
+    .alert-success-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--color-success-text);
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .alert-success-body {
+      font-size: 0.85rem;
+      color: #14532d;
+    }
+
+    .uuid-badge {
+      display: inline-block;
+      background: #ffffff;
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-success-border);
+      font-family: monospace;
+      font-weight: 600;
+      margin-top: 0.35rem;
+    }
+
+    /* --- 12. TABELA DE HÓSPEDES EM TEMPO REAL --- */
+    .table-container {
+      overflow-x: auto;
+      margin-top: 1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      text-align: left;
+    }
+
+    th {
+      background-color: var(--bg-subtle);
+      padding: 0.65rem 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    td {
+      padding: 0.65rem 0.75rem;
+      border-bottom: 1px solid #f1f5f9;
+      color: var(--text-main);
+    }
+
+    tr:hover td {
+      background-color: #f8fafc;
+    }
+
+    /* --- 13. RODAPÉ INSTITUCIONAL --- */
+    .app-footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      border-top: 1px solid var(--border-subtle);
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================================================================== -->
+  <!-- CABEÇALHO INSTITUCIONAL                                              -->
+  <!-- ==================================================================== -->
+  <header class="app-header">
+    <div class="brand-title">
+      <!-- Ícone SVG Monocromático de Hotel (Sem Emojis) -->
+      <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 21h18"></path>
+        <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path>
+        <path d="M9 9h1"></path>
+        <path d="M9 13h1"></path>
+        <path d="M9 17h1"></path>
+        <path d="M14 9h1"></path>
+        <path d="M14 13h1"></path>
+        <path d="M14 17h1"></path>
+      </svg>
+      <span>Grand Plaza Hotel Management</span>
+    </div>
+
+    <!-- Barra do operador logado (visível apenas após login) -->
+    <div class="operator-bar" id="operator-info-bar" style="display: none;">
+      <span id="operator-name-badge">Operador: Carregando...</span>
+      <button class="btn-logout" id="btn-logout-trigger">Sair</button>
+    </div>
+  </header>
+
+  <!-- ==================================================================== -->
+  <!-- CONTAINER PRINCIPAL: GESTOR DE VISÕES SPA                            -->
+  <!-- ==================================================================== -->
+  <main class="main-container">
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- VISÃO 1: TELA DE LOGIN DO OPERADOR (Sessão Segura)                 -->
+    <!-- ------------------------------------------------------------------ -->
+    <section id="view-login">
+      <div class="login-header">
+        <svg style="width: 38px; height: 38px; stroke: var(--brand-navy);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        <h2>Acesso Operacional</h2>
+        <p>Informe suas credenciais funcionais para acessar a recepção.</p>
+      </div>
+
+      <!-- Alerta de Erro de Login -->
+      <div id="login-error-alert" class="error-feedback" style="margin-bottom: 1rem; justify-content: center;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <span id="login-error-msg">Credenciais inválidas.</span>
+      </div>
+
+      <form id="form-login" novalidate>
+        <div class="form-group">
+          <label for="login-email">E-mail Institucional</label>
+          <input type="email" id="login-email" class="form-control" placeholder="recepcao@grandplaza.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="login-senha">Senha de Acesso</label>
+          <input type="password" id="login-senha" class="form-control" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="btn-login-submit" style="margin-top: 0.75rem;">
+          <span class="spinner" id="spinner-login"></span>
+          <span id="text-btn-login">Entrar no Sistema</span>
+        </button>
+
+        <p style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 1rem;">
+          Credencial de teste: <strong>recepcao@grandplaza.com</strong> / <strong>Hotel@2026Recep</strong>
+        </p>
+      </form>
+    </section>
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- VISÃO 2: PAINEL ADMINISTRATIVO (RF-001 CADASTRO DE HÓSPEDE)        -->
+    <!-- ------------------------------------------------------------------ -->
+    <section id="view-app">
+      <div class="content-grid">
+
+        <!-- COLUNA 1: FORMULÁRIO COM OS 5 ESTADOS VISUAIS -->
+        <div class="card">
+          <h2 class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7.5" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+            Cadastro de Novo Hóspede
+          </h2>
+          <p class="card-subtitle">Preencha os dados do cliente conforme o documento oficial de identificação.</p>
+
+          <!-- ESTADO 5: CARD DE SUCESSO -->
+          <div id="card-estado-sucesso" class="alert-success-card">
+            <div class="alert-success-header">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Hóspede Cadastrado com Sucesso!</span>
+            </div>
+            <div class="alert-success-body">
+              <p>O hóspede <strong id="sucesso-nome">...</strong> foi registrado com integridade.</p>
+              <p>Identificador Único (UUID): <br><span class="uuid-badge" id="sucesso-uuid">...</span></p>
+            </div>
+          </div>
+
+          <!-- FORMULÁRIO DE CADASTRO -->
+          <form id="form-hospede" novalidate>
+            <!-- Campo: Nome Completo -->
+            <div class="form-group">
+              <label for="hospede-nome">Nome Completo *</label>
+              <input type="text" id="hospede-nome" class="form-control" placeholder="Ex.: Carlos Eduardo Mendes" required minlength="3">
+              <div class="error-feedback" id="erro-nome">Informe um nome completo com no mínimo 3 caracteres.</div>
+            </div>
+
+            <!-- Campo: E-mail -->
+            <div class="form-group">
+              <label for="hospede-email">E-mail *</label>
+              <input type="email" id="hospede-email" class="form-control" placeholder="carlos.mendes@email.com" required>
+              <div class="error-feedback" id="erro-email">Informe um e-mail corporativo ou pessoal válido.</div>
+            </div>
+
+            <!-- Campo: CPF -->
+            <div class="form-group">
+              <label for="hospede-cpf">CPF (11 dígitos) *</label>
+              <input type="text" id="hospede-cpf" class="form-control" placeholder="000.000.000-00" maxlength="14" required>
+              <div class="error-feedback" id="erro-cpf">CPF inválido segundo o algoritmo módulo 11.</div>
+            </div>
+
+            <!-- Campo: Telefone -->
+            <div class="form-group">
+              <label for="hospede-telefone">Telefone de Contato *</label>
+              <input type="text" id="hospede-telefone" class="form-control" placeholder="(11) 98765-4321" maxlength="15" required>
+              <div class="error-feedback" id="erro-telefone">Informe um telefone válido com código DDD.</div>
+            </div>
+
+            <!-- Campo: Data de Nascimento -->
+            <div class="form-group">
+              <label for="hospede-nascimento">Data de Nascimento *</label>
+              <input type="date" id="hospede-nascimento" class="form-control" required>
+              <div class="error-feedback" id="erro-nascimento">Data inválida (não pode ser futura nem anterior a 1900).</div>
+            </div>
+
+            <!-- Campo: Observações -->
+            <div class="form-group">
+              <label for="hospede-observacoes">Observações / Preferências</label>
+              <textarea id="hospede-observacoes" class="form-control" rows="2" placeholder="Preferências de quarto, cama adicional, etc."></textarea>
+            </div>
+
+            <!-- BOTÕES DE SUBMISSÃO E LIMPEZA -->
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" id="btn-hospede-submit">
+                <span class="spinner" id="spinner-hospede"></span>
+                <span id="text-btn-hospede">Confirmar Cadastro de Hóspede</span>
+              </button>
+              <button type="button" class="btn btn-secondary" id="btn-hospede-reset" style="width: auto;">Limpar</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- COLUNA 2: LISTAGEM DE HÓSPEDES EM TEMPO REAL -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="card-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              Hóspedes Cadastrados
+            </h2>
+            <button class="btn btn-secondary" id="btn-atualizar-lista" style="height: 32px; padding: 0 0.65rem; font-size: 0.75rem;">
+              Atualizar Lista
+            </button>
+          </div>
+          <p class="card-subtitle">Registros gravados no banco de dados relacional com integridade.</p>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome do Hóspede</th>
+                  <th>E-mail</th>
+                  <th>CPF</th>
+                  <th>Telefone</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-hospedes-body">
+                <tr>
+                  <td colspan="4" style="text-align: center; color: var(--text-muted);">Carregando hóspedes...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================================================================== -->
+  <!-- RODAPÉ INSTITUCIONAL                                                 -->
+  <!-- ==================================================================== -->
+  <footer class="app-footer">
+    <p>Grand Plaza Hotel Management System &bull; Laboratório de Inovação III &bull; Prof. Edilberto Silva &bull; 2026</p>
+    <p style="font-size: 0.75rem; margin-top: 0.25rem;">Ambiente Seguro com Proteção OWASP A03 / A07 e Resiliência Transparente.</p>
+  </footer>
+
+  <!-- SCRIPT CLIENTE JAVASCRIPT MODULAR (APP.JS) -->
+  <script src="/app.js"></script>
+</body>
+</html>
