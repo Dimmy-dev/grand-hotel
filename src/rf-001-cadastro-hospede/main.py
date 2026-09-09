@@ -377,16 +377,25 @@ def cadastrar_hospede(
                 }
             }
         )
-    # 3. Criação da entidade ORM e Persistência no Banco
+    # 3. Preparação das variáveis locais de resposta (Snapshot pré-commit)
+    hospede_uuid = str(uuid.uuid4())
+    hospede_nome = payload.nome.strip()
+    hospede_email = payload.email.lower().strip()
+    hospede_cpf = payload.cpf.strip()
+    hospede_telefone = payload.telefone.strip()
+    hospede_nasc = str(payload.data_nascimento)
+    hospede_obs = payload.observacoes.strip() if payload.observacoes else None
+    data_criacao = datetime.utcnow().isoformat()
+
     try:
         novo_hospede = HospedeModel(
-            uuid_publico=str(uuid.uuid4()),
-            nome=payload.nome.strip(),
-            email=payload.email.lower().strip(),
-            cpf=payload.cpf.strip(),
-            telefone=payload.telefone.strip(),
+            uuid_publico=hospede_uuid,
+            nome=hospede_nome,
+            email=hospede_email,
+            cpf=hospede_cpf,
+            telefone=hospede_telefone,
             data_nascimento=payload.data_nascimento,
-            observacoes=payload.observacoes.strip() if payload.observacoes else None,
+            observacoes=hospede_obs,
             is_ativo=1
         )
         db.add(novo_hospede)
@@ -411,12 +420,12 @@ def cadastrar_hospede(
             id_operador=id_op,
             acao="CADASTRO_HOSPEDE",
             tabela_afetada="tb_hospedes",
-            registro_id=getattr(novo_hospede, "id", None),
+            registro_id=None,
             dados_novos=json.dumps({
-                "uuid": novo_hospede.uuid_publico,
-                "nome": novo_hospede.nome,
-                "email": novo_hospede.email,
-                "cpf_mascarado": f"***.{novo_hospede.cpf[3:6]}.{novo_hospede.cpf[6:9]}-**"
+                "uuid": hospede_uuid,
+                "nome": hospede_nome,
+                "email": hospede_email,
+                "cpf_mascarado": f"***.{hospede_cpf[3:6]}.{hospede_cpf[6:9]}-**"
             }),
             ip_origem=request.client.host if request.client else "unknown"
         )
@@ -429,14 +438,14 @@ def cadastrar_hospede(
     return {
         "success": True,
         "data": {
-            "uuid": novo_hospede.uuid_publico,
-            "nome": novo_hospede.nome,
-            "email": novo_hospede.email,
-            "cpf": novo_hospede.cpf,
-            "telefone": novo_hospede.telefone,
-            "data_nascimento": str(novo_hospede.data_nascimento),
-            "observacoes": novo_hospede.observacoes,
-            "created_at": datetime.utcnow().isoformat()
+            "uuid": hospede_uuid,
+            "nome": hospede_nome,
+            "email": hospede_email,
+            "cpf": hospede_cpf,
+            "telefone": hospede_telefone,
+            "data_nascimento": hospede_nasc,
+            "observacoes": hospede_obs,
+            "created_at": data_criacao
         }
     }
 
