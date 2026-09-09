@@ -129,6 +129,13 @@ def inicializar_banco_local(engine):
                             conn.execute(text(comando_limpo))
                     conn.commit()
                     logger.info("Seeds carregados com sucesso no banco SQLite local.")
+            else:
+                # Migração defensiva: garante existência da coluna is_ativo em bancos existentes
+                try:
+                    conn.execute(text("ALTER TABLE tb_hospedes ADD COLUMN is_ativo INTEGER NOT NULL DEFAULT 1"))
+                    conn.commit()
+                except Exception:
+                    pass # Coluna já existe
     except Exception as e:
         logger.error(f"Erro ao inicializar banco local de resiliência: {e}")
 

@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS tb_hospedes (
     telefone VARCHAR(20) NOT NULL,                -- Telefone de contato com DDD
     data_nascimento DATE NOT NULL,                -- Data de nascimento para validação legal (RN-03)
     observacoes TEXT,                             -- Notas operacionais ou preferências de acomodação
+    is_ativo INTEGER NOT NULL DEFAULT 1,          -- Status do registro: 1 = Ativo, 0 = Inativo
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Data e hora UTC da criação do cadastro
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP  -- Data e hora UTC da última alteração
 );
