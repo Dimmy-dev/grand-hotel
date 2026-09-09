@@ -28,7 +28,7 @@ if CURRENT_MODULE_DIR not in sys.path:
     sys.path.insert(0, CURRENT_MODULE_DIR)
 
 from fastapi import FastAPI, Depends, HTTPException, status, Request, Response
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, HTMLResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import RequestValidationError
@@ -458,22 +458,43 @@ def exportar_swagger_json():
 
 CURRENT_DIR = Path(__file__).resolve().parent
 
-@app.get("/", response_class=FileResponse, summary="Página Principal SPA", tags=["Frontend"])
+def obter_conteudo_arquivo(nome_arquivo: str) -> str:
+    """Busca o arquivo de forma resiliente tanto no diretório local quanto na raiz da Vercel."""
+    tentativas = [
+        CURRENT_DIR / nome_arquivo,
+        Path("src/rf-001-cadastro-hospede") / nome_arquivo,
+        Path(__file__).parent / nome_arquivo
+    ]
+    for p in tentativas:
+        if p.exists():
+            return p.read_text(encoding="utf-8")
+    return ""
+
+@app.get("/", response_class=HTMLResponse, summary="Página Principal SPA", tags=["Frontend"])
+@app.get("/api", response_class=HTMLResponse, include_in_schema=False)
+@app.get("/api/index", response_class=HTMLResponse, include_in_schema=False)
 def get_index():
     """Serve o arquivo único index.html contendo a aplicação frontend completa."""
-    index_path = CURRENT_DIR / "index.html"
-    if not index_path.exists():
-        raise HTTPException(status_code=404, detail="Arquivo index.html ainda não foi criado.")
-    return FileResponse(index_path, media_type="text/html")
+    conteudo = obter_conteudo_arquivo("index.html")
+    if not conteudo:
+        index_path = CURRENT_DIR / "index.html"
+        if index_path.exists():
+            return FileResponse(index_path, media_type="text/html")
+        raise HTTPException(status_code=404, detail="Arquivo index.html não localizado.")
+    return HTMLResponse(content=conteudo, status_code=200)
 
 
-@app.get("/app.js", response_class=FileResponse, summary="Script Cliente da SPA", tags=["Frontend"])
+@app.get("/app.js", summary="Script Cliente da SPA", tags=["Frontend"])
+@app.get("/api/app.js", include_in_schema=False)
 def get_app_js():
     """Serve o arquivo de script cliente app.js contendo a máquina de estados e validações."""
-    js_path = CURRENT_DIR / "app.js"
-    if not js_path.exists():
-        raise HTTPException(status_code=404, detail="Arquivo app.js ainda não foi criado.")
-    return FileResponse(js_path, media_type="application/javascript")
+    conteudo = obter_conteudo_arquivo("app.js")
+    if not conteudo:
+        js_path = CURRENT_DIR / "app.js"
+        if js_path.exists():
+            return FileResponse(js_path, media_type="application/javascript")
+        raise HTTPException(status_code=404, detail="Arquivo app.js não localizado.")
+    return Response(content=conteudo, media_type="application/javascript", status_code=200)
 
 
 if __name__ == "__main__":
