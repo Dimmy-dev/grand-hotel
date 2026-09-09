@@ -159,6 +159,21 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Garante que qualquer erro não tratado retorne JSON padronizado e nunca texto plano."""
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "success": False,
+            "error": {
+                "code": "SERVER_ERROR",
+                "message": str(exc)
+            }
+        }
+    )
+
+
 # ----------------------------------------------------------------------------
 # FUNÇÕES UTILITÁRIAS DE AUTENTICAÇÃO E SESSÃO
 # ----------------------------------------------------------------------------

@@ -65,15 +65,12 @@ def obter_engine():
         if database_url.startswith("postgresql"):
             try:
                 logger.info("Tentando conectar ao banco de dados primário (Supabase PostgreSQL na nuvem)...")
-                # Configuração otimizada para Serverless com timeout defensivo de 5 segundos
+                from sqlalchemy.pool import NullPool
                 engine = create_engine(
                     database_url,
-                    connect_args={"connect_timeout": 5}, # Evita travamento caso a nuvem esteja lenta
-                    pool_pre_ping=True,                  # Verifica se a conexão está viva antes de usar
-                    pool_recycle=300,                    # Recicla conexões a cada 5 minutos
-                    max_overflow=10                      # Limite de conexões adicionais
+                    connect_args={"connect_timeout": 8},
+                    poolclass=NullPool
                 )
-                # Teste rápido de conectividade (ping)
                 with engine.connect() as conn:
                     conn.execute(text("SELECT 1"))
                 logger.info("Conexão com Supabase PostgreSQL estabelecida com sucesso! [PRODUÇÃO EM NUVEM ATIVA]")
@@ -81,16 +78,22 @@ def obter_engine():
             except Exception as e:
                 logger.warning(f"Falha ao conectar com o Supabase ({e}). Ativando fallback de resiliência local...")
     
-    # 2. Fallback de Resiliência: SQLite local (Garante nota 100% sem falha na máquina do professor)
-    sqlite_url = f"sqlite:///{DB_FILE_PATH}"
-    logger.info(f"Conectando ao banco relacional local SQLite: {DB_FILE_PATH}")
+    # 2. Fallback de Resiliência: SQLite local
+    # Em ambiente Serverless (Vercel/Lambda), o diretório da aplicação é read-only; usamos /tmp
+    is_serverless = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+    if is_serverless:
+        sqlite_path = Path("/tmp") / "hotel_grand_plaza.db"
+    else:
+        sqlite_path = DB_FILE_PATH
+
+    sqlite_url = f"sqlite:///{sqlite_path}"
+    logger.info(f"Conectando ao banco relacional local SQLite: {sqlite_path}")
     
     engine = create_engine(
         sqlite_url,
-        connect_args={"check_same_thread": False} # Permite compartilhamento entre threads do FastAPI
+        connect_args={"check_same_thread": False}
     )
     
-    # Inicializa as tabelas e dados de teste se o arquivo não existir ou estiver zerado
     inicializar_banco_local(engine)
     return engine
 
