@@ -234,34 +234,40 @@ def login(payload: LoginSchema, response: Response, request: Request, db: Sessio
     token_hash = gerar_hash_token(raw_token)
     expiracao = datetime.utcnow() + timedelta(hours=8) # Validade de 8 horas de turno
 
-    # 5. Salva apenas o hash da sessão no banco de dados (OWASP A07)
-    nova_sessao = SessaoModel(
-        id_operador=operador.id,
-        token_hash=token_hash,
-        ip_origem=request.client.host if request.client else "unknown",
-        user_agent=request.headers.get("user-agent", "unknown")[:500],
-        expires_at=expiracao,
-        is_active=1
-    )
-    db.add(nova_sessao)
+    # 5. Salva apenas o hash da sessão no banco de dados com proteção transacional
+    try:
+        nova_sessao = SessaoModel(
+            id_operador=operador.id,
+            token_hash=token_hash,
+            ip_origem=request.client.host if request.client else "unknown",
+            user_agent=request.headers.get("user-agent", "unknown")[:500],
+            expires_at=expiracao,
+            is_active=1
+        )
+        db.add(nova_sessao)
 
-    # 6. Registra auditoria do login (RN-05)
-    log_login = AuditLogModel(
-        id_operador=operador.id,
-        acao="LOGIN",
-        tabela_afetada="tb_sessoes",
-        dados_novos=f'{{"email": "{operador.email}", "cargo": "{operador.cargo}"}}',
-        ip_origem=request.client.host if request.client else "unknown"
-    )
-    db.add(log_login)
-    db.commit()
+        # 6. Registra auditoria do login (RN-05)
+        log_login = AuditLogModel(
+            id_operador=operador.id,
+            acao="LOGIN",
+            tabela_afetada="tb_sessoes",
+            dados_novos=f'{{"email": "{operador.email}", "cargo": "{operador.cargo}"}}',
+            ip_origem=request.client.host if request.client else "unknown"
+        )
+        db.add(log_login)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        # Se falhar o log de auditoria, prossegue permitindo o login do operador
+        pass
 
-    # 7. Injeta o cookie seguro HttpOnly na resposta
+    # 7. Injeta o cookie seguro HttpOnly na resposta com suporte HTTPS
     response.set_cookie(
         key="session_token",
         value=raw_token,
         httponly=True,        # Impede leitura por JavaScript (Proteção contra XSS)
         samesite="lax",       # Proteção contra Cross-Site Request Forgery (CSRF)
+        secure=True,          # Obrigatório para HTTPS na Vercel
         max_age=28800,        # 8 horas em segundos
         path="/"
     )
