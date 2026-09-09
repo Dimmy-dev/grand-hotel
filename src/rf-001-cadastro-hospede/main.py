@@ -402,6 +402,21 @@ def cadastrar_hospede(
         db.commit()
     except Exception as e:
         db.rollback()
+        # Se for erro de violação de unicidade (IntegrityError), responde com 409 Conflict
+        msg_erro = str(e).lower()
+        if "unique constraint" in msg_erro or "integrityerror" in msg_erro:
+            campo_afetado = "cpf" if "cpf" in msg_erro else "email"
+            return JSONResponse(
+                status_code=status.HTTP_409_CONFLICT,
+                content={
+                    "success": False,
+                    "error": {
+                        "code": "DUPLICATE_ENTRY",
+                        "message": f"Este {campo_afetado.upper()} já está cadastrado no sistema.",
+                        "field": campo_afetado
+                    }
+                }
+            )
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={

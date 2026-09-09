@@ -88,7 +88,7 @@ VALUES
     'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     'Maria Oliveira (Recepção)',
     'recepcao@grandplaza.com',
-    '$2b$12$GvRy/KnJwWYztkzH.Cm01Oczn.wfYsYuF6fmeNCQjcOesxrHj0Og6',
+    '$2b$12$KDfmfg42kMNx5luWhsLpVukA1mM/NpF/22jzWRPDJJu8GSMA/1k22',
     'RECEPCIONISTA',
     1
 ),
@@ -97,7 +97,7 @@ VALUES
     'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e',
     'Carlos Alberto (Gerente Geral)',
     'gerencia@grandplaza.com',
-    '$2b$12$Dj4QBsMoRgtD/qws.vd5cuHzl6n3FzTT4UeycAk4pH4IgSDuHNx/O',
+    '$2b$12$U/pmgWx4E8Zf0txzkOP8xeOFP5ON1hl0X.fpAKUvFLE4qF3n0Ird6',
     'GERENTE',
     1
 ),
@@ -106,7 +106,7 @@ VALUES
     'c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8f',
     'Administrador do Sistema',
     'admin@grandplaza.com',
-    '$2b$12$nrmf/fVottj67BteiuUvYuPv56wIDbd0eB2jvelmiFMopSs1OhljK',
+    '$2b$12$/o1jLTX4L7xbsIOOZxpya.oS0OTQHyYt2hcdScsEbcpMdK5Gb9Gcy',
     'ADMIN',
     1
 )
