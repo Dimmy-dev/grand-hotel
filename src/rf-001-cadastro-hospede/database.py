@@ -59,6 +59,8 @@ def obter_engine():
     """
     global DB_DIAGNOSTICS
     database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        database_url = database_url.strip()
     DB_DIAGNOSTICS["database_url_configured"] = bool(database_url)
     
     # 1. Tentativa de conexão primária com o Supabase (PostgreSQL)
