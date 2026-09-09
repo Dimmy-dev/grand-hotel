@@ -86,6 +86,26 @@
         }
       }
     },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "Sistema"
+        ],
+        "summary": "Status do Sistema e Banco de Dados",
+        "description": "Retorna o diagnóstico de conectividade com o banco de dados (Supabase vs Fallback).",
+        "operationId": "health_check_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/hospedes": {
       "get": {
         "tags": [
@@ -174,7 +194,14 @@
         "operationId": "get_index__get",
         "responses": {
           "200": {
-            "description": "Successful Response"
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
@@ -189,7 +216,12 @@
         "operationId": "get_app_js_app_js_get",
         "responses": {
           "200": {
-            "description": "Successful Response"
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
           }
         }
       }

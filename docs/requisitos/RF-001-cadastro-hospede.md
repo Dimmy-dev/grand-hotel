@@ -24,10 +24,10 @@
 
 - **PACOTE_DE_ENTREGA:** `GRUPO-06-SEMANA-01.zip`
 - **LINK_REPOSITORIO_GITHUB:** https://github.com/Dimmy-dev/grand-hotel
-- **BRANCH_PRINCIPAL:** `main` ou `develop`
-- **LINK_APLICACAO_DEPLOY:** https://seu-projeto.vercel.app (ou Túnel Cloudflare HTTPS ativo)
+- **BRANCH_PRINCIPAL:** `main`
+- **LINK_APLICACAO_DEPLOY:** https://grand-hotel-tawny.vercel.app
 - **LINK_BANCO_DADOS:** Supabase PostgreSQL 15+ (`https://supabase.com/dashboard/project/dcgeffvwpkptpfqveeqj` — Datacenter São Paulo `sa-east-1` via PgBouncer na porta 6543) + SQLite local de resiliência empacotado no ZIP (`hotel_grand_plaza.db`)
-- **LINK_API_SWAGGER:** https://seu-projeto.vercel.app/docs
+- **LINK_API_SWAGGER:** https://grand-hotel-tawny.vercel.app/docs
 - **ARQUIVO_SWAGGER_LOCAL:** `docs/api/swagger.json`
 
 ---
