@@ -9,9 +9,11 @@ da Vercel antes de despachar para a aplicação FastAPI oficial.
 import sys
 import os
 
-# Resolução de diretórios absolutos
+# Resolução de diretórios absolutos (Carrega o requisito mais recente disponível)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC_DIR = os.path.join(BASE_DIR, "src", "rf-001-cadastro-hospede")
+SRC_DIR_RF2 = os.path.join(BASE_DIR, "src", "rf-002-alterar-hospede")
+SRC_DIR_RF1 = os.path.join(BASE_DIR, "src", "rf-001-cadastro-hospede")
+SRC_DIR = SRC_DIR_RF2 if os.path.exists(SRC_DIR_RF2) else SRC_DIR_RF1
 
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)

@@ -107,24 +107,6 @@
       }
     },
     "/api/v1/hospedes": {
-      "get": {
-        "tags": [
-          "Hóspedes"
-        ],
-        "summary": "Listagem de Hóspedes Cadastrados",
-        "description": "Retorna a lista em ordem decrescente dos hóspedes cadastrados no hotel.",
-        "operationId": "listar_hospedes_api_v1_hospedes_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        }
-      },
       "post": {
         "tags": [
           "Hóspedes"
@@ -133,17 +115,220 @@
         "description": "Registra um novo hóspede no sistema com validação matemática Módulo 11,\nprevenção contra e-mails e CPFs duplicados e trilha de auditoria LGPD.",
         "operationId": "cadastrar_hospede_api_v1_hospedes_post",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/HospedeCreateSchema"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Hóspedes"
+        ],
+        "summary": "Listagem e Busca Preditiva de Hóspedes",
+        "description": "Retorna a lista de hóspedes com suporte a busca preditiva por Nome, CPF ou E-mail\ne filtragem por status (todos, ativos, inativos).",
+        "operationId": "listar_hospedes_api_v1_hospedes_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "status_filtro",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status Filtro"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hospedes/{hospede_uuid}": {
+      "get": {
+        "tags": [
+          "Hóspedes"
+        ],
+        "summary": "Detalhes do Hóspede por UUID",
+        "description": "Retorna os dados cadastrais detalhados de um hóspede específico através do seu UUID público.",
+        "operationId": "obter_hospede_api_v1_hospedes__hospede_uuid__get",
+        "parameters": [
+          {
+            "name": "hospede_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Hospede Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Hóspedes"
+        ],
+        "summary": "Atualização Cadastral de Hóspede",
+        "description": "Atualiza dados cadastrais de contato do hóspede (nome, e-mail, telefone, observações).\nO CPF permanece estritamente imutável para conformidade legal e auditoria.",
+        "operationId": "atualizar_hospede_api_v1_hospedes__hospede_uuid__put",
+        "parameters": [
+          {
+            "name": "hospede_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Hospede Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HospedeUpdateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hospedes/{hospede_uuid}/status": {
+      "patch": {
+        "tags": [
+          "Hóspedes"
+        ],
+        "summary": "Alternar Status de Hóspede (Soft Delete / Reativação)",
+        "description": "Ativa ou inativa o cadastro do hóspede de forma lógica (Soft Delete).\nPreserva o histórico referencial e registra evento de auditoria LGPD.",
+        "operationId": "alternar_status_hospede_api_v1_hospedes__hospede_uuid__status_patch",
+        "parameters": [
+          {
+            "name": "hospede_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Hospede Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HospedeStatusSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -299,6 +484,68 @@
         ],
         "title": "HospedeCreateSchema",
         "description": "Payload de entrada para o cadastro de hóspedes (RF-001).\nContém validação algorítmica e sanitização anti-XSS."
+      },
+      "HospedeStatusSchema": {
+        "properties": {
+          "is_ativo": {
+            "type": "integer",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Is Ativo",
+            "description": "Status do cadastro: 1 = Ativo, 0 = Inativo (Soft Delete)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_ativo"
+        ],
+        "title": "HospedeStatusSchema",
+        "description": "Payload de entrada para alternância de status ativo/inativo (RF-002 - Soft Delete)."
+      },
+      "HospedeUpdateSchema": {
+        "properties": {
+          "nome": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 3,
+            "title": "Nome",
+            "description": "Nome completo do hóspede"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "Novo endereço de e-mail válido (RFC 5322)"
+          },
+          "telefone": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 10,
+            "title": "Telefone",
+            "description": "Telefone atualizado com DDD"
+          },
+          "observacoes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observacoes",
+            "description": "Observações ou notas operacionais atualizadas"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nome",
+          "email",
+          "telefone"
+        ],
+        "title": "HospedeUpdateSchema",
+        "description": "Payload de entrada para atualização cadastral de hóspedes (RF-002).\nO CPF é estritamente omitido deste DTO para garantir sua imutabilidade legal."
       },
       "LoginSchema": {
         "properties": {
