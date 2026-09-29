@@ -611,18 +611,52 @@
         <form id="form-login" novalidate>
           <div class="form-group" style="margin-bottom: 1.1rem;">
             <label for="login-email">E-mail Institucional</label>
-            <input type="email" id="login-email" class="input-control" placeholder="nome@grandplaza.com" required autocomplete="username">
+            <input type="email" id="login-email" class="input-control" placeholder="nome@grandplaza.com" value="admin@grandplaza.com" required autocomplete="username">
           </div>
 
           <div class="form-group" style="margin-bottom: 1.5rem;">
             <label for="login-password">Senha de Acesso</label>
-            <input type="password" id="login-password" class="input-control" placeholder="••••••••" required autocomplete="current-password">
+            <input type="password" id="login-password" class="input-control" placeholder="••••••••" value="Hotel@2026Admin" required autocomplete="current-password">
           </div>
 
           <button type="submit" class="btn-primary" id="btn-submit-login" style="width: 100%;">
             <span id="login-btn-text">Entrar no Sistema</span>
           </button>
         </form>
+
+        <!-- Painel Didático de Demonstração / Avaliação Acadêmica -->
+        <div class="demo-box" style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-subtle);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem;">
+            <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--brand-navy); background: #e0f2fe; padding: 0.15rem 0.5rem; border-radius: 4px;">Ambiente de Avaliação</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Acesso rápido</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem; line-height: 1.4;">
+            As credenciais do <strong>Administrador</strong> já estão pré-carregadas acima. Basta clicar em <em>"Entrar no Sistema"</em> ou alternar o perfil de teste:
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+            <button type="button" class="btn-demo-preset active" id="preset-admin" style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.75rem; border: 1px solid #93c5fd; background: #eff6ff; border-radius: var(--radius-sm); font-size: 0.8rem; cursor: pointer; text-align: left; transition: all var(--transition-fast);">
+              <div>
+                <strong style="color: #1e40af; display: block;">ADMINISTRADOR (Acesso Total)</strong>
+                <span style="font-size: 0.72rem; color: #475569;">Senha: Hotel@2026Admin</span>
+              </div>
+              <code style="font-size: 0.75rem; color: #2563eb;">admin@grandplaza.com</code>
+            </button>
+            <button type="button" class="btn-demo-preset" id="preset-gerente" style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.75rem; border: 1px solid var(--border-subtle); background: var(--bg-surface); border-radius: var(--radius-sm); font-size: 0.8rem; cursor: pointer; text-align: left; transition: all var(--transition-fast);">
+              <div>
+                <strong style="color: var(--text-main); display: block;">GERENTE GERAL</strong>
+                <span style="font-size: 0.72rem; color: var(--text-muted);">Senha: Hotel@2026Gerente</span>
+              </div>
+              <code style="font-size: 0.75rem; color: var(--text-muted);">gerencia@grandplaza.com</code>
+            </button>
+            <button type="button" class="btn-demo-preset" id="preset-funcionario" style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.75rem; border: 1px solid var(--border-subtle); background: var(--bg-surface); border-radius: var(--radius-sm); font-size: 0.8rem; cursor: pointer; text-align: left; transition: all var(--transition-fast);">
+              <div>
+                <strong style="color: var(--text-main); display: block;">FUNCIONÁRIO (Recepção)</strong>
+                <span style="font-size: 0.72rem; color: var(--text-muted);">Senha: Hotel@2026Recep</span>
+              </div>
+              <code style="font-size: 0.75rem; color: var(--text-muted);">recepcao@grandplaza.com</code>
+            </button>
+          </div>
+        </div>
       </div>
     </section>
 

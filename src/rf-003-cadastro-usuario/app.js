@@ -164,7 +164,6 @@ function configurarEventosAutenticacao() {
           // Login bem-sucedido
           AppState.usuarioLogado = json.data;
           renderizarTopbarUsuario(json.data);
-          formLogin.reset();
           alternarVisao("app");
           carregarListaOperadores();
           carregarListaHospedes();
@@ -183,6 +182,45 @@ function configurarEventosAutenticacao() {
     });
   }
 
+  // Configuração dos Botões de Preset de Demonstração (Facilita a Avaliação do Professor)
+  const inputEmail = document.getElementById("login-email");
+  const inputSenha = document.getElementById("login-password");
+  const presetAdmin = document.getElementById("preset-admin");
+  const presetGerente = document.getElementById("preset-gerente");
+  const presetFuncionario = document.getElementById("preset-funcionario");
+  const todosPresets = [presetAdmin, presetGerente, presetFuncionario];
+
+  function selecionarPreset(btnAtivo, email, senha) {
+    if (inputEmail) inputEmail.value = email;
+    if (inputSenha) inputSenha.value = senha;
+    todosPresets.forEach(b => {
+      if (b) {
+        b.style.borderColor = "var(--border-subtle)";
+        b.style.backgroundColor = "var(--bg-surface)";
+      }
+    });
+    if (btnAtivo) {
+      btnAtivo.style.borderColor = "#93c5fd";
+      btnAtivo.style.backgroundColor = "#eff6ff";
+    }
+  }
+
+  if (presetAdmin) {
+    presetAdmin.addEventListener("click", () => {
+      selecionarPreset(presetAdmin, "admin@grandplaza.com", "Hotel@2026Admin");
+    });
+  }
+  if (presetGerente) {
+    presetGerente.addEventListener("click", () => {
+      selecionarPreset(presetGerente, "gerencia@grandplaza.com", "Hotel@2026Gerente");
+    });
+  }
+  if (presetFuncionario) {
+    presetFuncionario.addEventListener("click", () => {
+      selecionarPreset(presetFuncionario, "recepcao@grandplaza.com", "Hotel@2026Recep");
+    });
+  }
+
   // Encerramento de Turno / Logout
   if (btnLogout) {
     btnLogout.addEventListener("click", async () => {
@@ -195,6 +233,8 @@ function configurarEventosAutenticacao() {
         console.error("Falha ao comunicar logout:", err);
       }
       AppState.usuarioLogado = null;
+      // Restaura credenciais padrão de Administrador para o próximo teste
+      selecionarPreset(presetAdmin, "admin@grandplaza.com", "Hotel@2026Admin");
       alternarVisao("login");
     });
   }
