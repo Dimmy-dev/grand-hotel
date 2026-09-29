@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grand Plaza Hotel Management — Gestão de Usuários do Sistema</title>
+  
+  <!-- ==================================================================== -->
+  <!-- ESTILOS CSS EMBUTIDOS (DESIGN SYSTEM ANTISSLOP + BASELINE UI)         -->
+  <!-- DIRETRIZES: regras/front.md (Paleta Slate, Acento Navy, Zero Emojis)  -->
+  <!-- ==================================================================== -->
+  <style>
+    /* --- 1. DESIGN TOKENS OFICIAIS (VARIÁVEIS CSS) --- */
+    :root {
+      --bg-app: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-subtle: #f1f5f9;
+
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-placeholder: #94a3b8;
+
+      --brand-navy: #1e3a8a;
+      --brand-navy-hover: #1e40af;
+      --brand-focus-ring: rgba(30, 58, 138, 0.18);
+
+      --color-success-bg: #f0fdf4;
+      --color-success-border: #86efac;
+      --color-success-text: #166534;
+
+      --color-error-bg: #fef2f2;
+      --color-error-border: #dc2626;
+      --color-error-text: #b91c1c;
+
+      --border-subtle: #cbd5e1;
+      --border-hover: #94a3b8;
+
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 14px;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+      --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-float: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+
+      --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* --- 2. CABEÇALHO SUPERIOR (TOPBAR INFORMATIVA) --- */
+    .app-header {
+      background-color: var(--brand-navy);
+      color: #ffffff;
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-icon {
+      width: 22px;
+      height: 22px;
+      stroke: #ffffff;
+    }
+
+    /* Topbar com nome e badge de nível de usuário */
+    .operator-bar {
+      display: flex;
+      align-items: center;
+      gap: 1.1rem;
+      font-size: 0.875rem;
+    }
+
+    .user-profile-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .user-name-display {
+      font-weight: 500;
+      color: #ffffff;
+    }
+
+    .badge-role {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.55rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.725rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .badge-role-admin {
+      background-color: #3b82f6;
+      color: #ffffff;
+    }
+
+    .badge-role-gerente {
+      background-color: #475569;
+      color: #f8fafc;
+    }
+
+    .badge-role-funcionario {
+      background-color: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+    }
+
+    .btn-logout {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+      padding: 0.35rem 0.75rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: background var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .btn-logout:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* --- 3. ESTRUTURA PRINCIPAL --- */
+    .main-container {
+      max-width: 1080px;
+      width: 100%;
+      margin: 2rem auto;
+      padding: 0 1.25rem;
+      flex: 1;
+    }
+
+    /* --- 4. TELA DE LOGIN --- */
+    .auth-card {
+      max-width: 420px;
+      margin: 4rem auto;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 2.25rem;
+      box-shadow: var(--shadow-card);
+    }
+
+    .auth-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--brand-navy);
+      margin-bottom: 0.4rem;
+    }
+
+    .auth-subtitle {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 1.75rem;
+    }
+
+    /* --- 5. PAINEL DE NAVEGAÇÃO / TABS --- */
+    .tabs-header {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 1.5rem;
+    }
+
+    .tab-btn {
+      padding: 0.65rem 1.1rem;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      transition: color var(--transition-fast), border-color var(--transition-fast);
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      color: var(--brand-navy);
+      border-bottom-color: var(--brand-navy);
+    }
+
+    /* --- 6. CARTÕES E FORMULÁRIOS --- */
+    .panel-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 2rem;
+    }
+
+    .panel-header {
+      margin-bottom: 1.25rem;
+    }
+
+    .panel-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .panel-description {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+    }
+
+    .col-full {
+      grid-column: span 2;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .input-control {
+      height: 42px;
+      padding: 0 0.85rem;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+      outline: none;
+    }
+
+    select.input-control {
+      cursor: pointer;
+    }
+
+    .input-control:focus {
+      border-color: var(--brand-navy);
+      box-shadow: 0 0 0 3px var(--brand-focus-ring);
+    }
+
+    .input-control.input-error {
+      border-color: var(--color-error-border);
+      background-color: #fffafb;
+    }
+
+    .input-control.input-valid {
+      border-color: var(--color-success-border);
+    }
+
+    .field-hint {
+      font-size: 0.775rem;
+      color: var(--text-muted);
+    }
+
+    .field-error-msg {
+      font-size: 0.775rem;
+      color: var(--color-error-text);
+      display: none;
+      align-items: center;
+      gap: 0.3rem;
+      font-weight: 500;
+    }
+
+    .form-actions {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+    }
+
+    .btn-primary {
+      height: 42px;
+      padding: 0 1.5rem;
+      background-color: var(--brand-navy);
+      color: #ffffff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: background var(--transition-fast);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background-color: var(--brand-navy-hover);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      height: 42px;
+      padding: 0 1.25rem;
+      background-color: var(--bg-subtle);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--transition-fast);
+    }
+
+    .btn-secondary:hover {
+      background-color: #e2e8f0;
+    }
+
+    /* --- 7. ESTADOS VISUAIS (FEEDBACK DE SUCESSO E ERRO) --- */
+    .state-banner {
+      display: none;
+      padding: 1rem 1.25rem;
+      border-radius: var(--radius-md);
+      margin-bottom: 1.5rem;
+      font-size: 0.875rem;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .state-banner-success {
+      background-color: var(--color-success-bg);
+      border: 1px solid var(--color-success-border);
+      color: var(--color-success-text);
+    }
+
+    .state-banner-error {
+      background-color: var(--color-error-bg);
+      border: 1px solid var(--color-error-border);
+      color: var(--color-error-text);
+    }
+
+    /* Spinner SVG animado */
+    .spinner-svg {
+      animation: spin 0.8s linear infinite;
+      width: 18px;
+      height: 18px;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* --- 8. TABELA DE USUÁRIOS E LISTAGEM --- */
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.875rem;
+    }
+
+    th {
+      background-color: var(--bg-subtle);
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 0.775rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background-color: #fcfdfe;
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      font-size: 0.775rem;
+      font-weight: 600;
+    }
+
+    .badge-status-online {
+      background-color: #f0fdf4;
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+    }
+
+    .badge-status-offline {
+      background-color: #f8fafc;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+
+    .badge-status-inativo {
+      background-color: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+
+    .dot-status {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+
+    .dot-online {
+      background-color: #22c55e;
+      box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+    }
+
+    .dot-offline {
+      background-color: #94a3b8;
+    }
+
+    .dot-inativo {
+      background-color: #ef4444;
+    }
+
+    .actions-cell {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .btn-action-edit {
+      background: none;
+      border: 1px solid var(--brand-navy);
+      color: var(--brand-navy);
+      padding: 0.3rem 0.65rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.775rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: background var(--transition-fast), color var(--transition-fast);
+    }
+
+    .btn-action-edit:hover {
+      background-color: var(--brand-navy);
+      color: #ffffff;
+    }
+
+    .btn-action-status {
+      background: none;
+      border: 1px solid var(--border-subtle);
+      padding: 0.3rem 0.65rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.775rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: background var(--transition-fast), color var(--transition-fast);
+    }
+
+    .btn-action-status:hover {
+      background-color: var(--bg-subtle);
+      color: var(--text-main);
+    }
+
+    /* Modal de confirmação */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(2px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-card {
+      background: var(--bg-surface);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      max-width: 440px;
+      width: 90%;
+      box-shadow: var(--shadow-float);
+    }
+
+    /* Responsividade */
+    @media (max-width: 680px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .col-full {
+        grid-column: span 1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================================================================== -->
+  <!-- 1. TOPBAR INSTITUCIONAL FIXA COM NOME E CARGO DO USUÁRIO             -->
+  <!-- ==================================================================== -->
+  <header class="app-header">
+    <div class="brand-title">
+      <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 21h18M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1"/>
+      </svg>
+      <span>Grand Plaza Hotel</span>
+    </div>
+
+    <!-- Barra de Usuário Logado -->
+    <div class="operator-bar" id="topbar-user-area" style="display: none;">
+      <div class="user-profile-info">
+        <span class="user-name-display" id="display-user-name">Carregando...</span>
+        <span class="badge-role" id="display-user-role">ADMIN</span>
+      </div>
+      <button type="button" class="btn-logout" id="btn-logout" aria-label="Encerrar sessão de trabalho">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+        </svg>
+        <span>Sair</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ==================================================================== -->
+  <!-- 2. CONTAINER PRINCIPAL (GERENCIAMENTO DE VISÕES SPA)                 -->
+  <!-- ==================================================================== -->
+  <main class="main-container">
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- VISÃO 1: AUTENTICAÇÃO / LOGIN DO OPERADOR                          -->
+    <!-- ------------------------------------------------------------------ -->
+    <section id="view-login">
+      <div class="auth-card">
+        <h1 class="auth-title">Acesso Operacional</h1>
+        <p class="auth-subtitle">Entre com suas credenciais corporativas do hotel</p>
+
+        <!-- Banner de Erro do Login -->
+        <div id="login-error-banner" class="state-banner state-banner-error" role="alert">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+          </svg>
+          <span id="login-error-text">Credenciais inválidas.</span>
+        </div>
+
+        <form id="form-login" novalidate>
+          <div class="form-group" style="margin-bottom: 1.1rem;">
+            <label for="login-email">E-mail Institucional</label>
+            <input type="email" id="login-email" class="input-control" placeholder="nome@grandplaza.com" required autocomplete="username">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label for="login-password">Senha de Acesso</label>
+            <input type="password" id="login-password" class="input-control" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+
+          <button type="submit" class="btn-primary" id="btn-submit-login" style="width: 100%;">
+            <span id="login-btn-text">Entrar no Sistema</span>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- VISÃO 2: PAINEL PRINCIPAL DO SISTEMA                               -->
+    <!-- ------------------------------------------------------------------ -->
+    <section id="view-app" style="display: none;">
+      
+      <!-- Navegação em Abas (Tabs) -->
+      <nav class="tabs-header" aria-label="Navegação do Módulo">
+        <button type="button" class="tab-btn active" id="tab-nav-usuarios">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+          </svg>
+          <span>Gestão de Usuários</span>
+        </button>
+        <button type="button" class="tab-btn" id="tab-nav-hospedes">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          <span>Listagem de Hóspedes</span>
+        </button>
+      </nav>
+
+      <!-- PAINEL 1: GESTÃO DE USUÁRIOS DO SISTEMA (RF-003) -->
+      <div id="pane-usuarios">
+        
+        <!-- Formulário de Cadastro de Novo Usuário (Restrito a Admin) -->
+        <div class="panel-card" id="card-form-operador">
+          <div class="panel-header">
+            <h2 class="panel-title">Cadastrar Novo Usuário do Sistema</h2>
+            <p class="panel-description">Cadastre colaboradores e defina seus privilégios de acesso (Admin, Gerente ou Funcionário).</p>
+          </div>
+
+          <!-- Banners dos 5 Estados Visuais -->
+          <div id="user-success-banner" class="state-banner state-banner-success" role="status">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+            <span id="user-success-text">Usuário cadastrado com sucesso no sistema!</span>
+          </div>
+
+          <div id="user-error-banner" class="state-banner state-banner-error" role="alert">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+            </svg>
+            <span id="user-error-text">Ocorreu um erro ao processar o cadastro.</span>
+          </div>
+
+          <form id="form-novo-operador" novalidate>
+            <div class="form-grid">
+              
+              <!-- Nome Completo -->
+              <div class="form-group">
+                <label for="op-nome">Nome Completo *</label>
+                <input type="text" id="op-nome" class="input-control" placeholder="Ex: Roberto Carlos Silva" required minlength="3">
+                <span class="field-error-msg" id="err-op-nome">Nome deve ter ao menos 3 caracteres.</span>
+              </div>
+
+              <!-- E-mail Institucional -->
+              <div class="form-group">
+                <label for="op-email">E-mail Corporativo *</label>
+                <input type="email" id="op-email" class="input-control" placeholder="colaborador@grandplaza.com" required>
+                <span class="field-error-msg" id="err-op-email">Informe um e-mail corporativo válido.</span>
+              </div>
+
+              <!-- Nível de Acesso / Cargo -->
+              <div class="form-group">
+                <label for="op-cargo">Nível de Acesso (Perfil) *</label>
+                <select id="op-cargo" class="input-control" required>
+                  <option value="FUNCIONARIO">Funcionário Normal (Recepção / Atendimento)</option>
+                  <option value="GERENTE">Gerente Geral (Supervisão e Relatórios)</option>
+                  <option value="ADMIN">Administrador (Acesso Irrestrito ao Sistema)</option>
+                </select>
+                <span class="field-hint">Define as permissões operacionais do usuário no hotel.</span>
+              </div>
+
+              <!-- Senha -->
+              <div class="form-group">
+                <label for="op-senha">Senha Temporária / Definitiva *</label>
+                <input type="password" id="op-senha" class="input-control" placeholder="Mínimo de 6 caracteres" required minlength="6">
+                <span class="field-error-msg" id="err-op-senha">A senha deve ter no mínimo 6 caracteres.</span>
+              </div>
+
+              <!-- Confirmação de Senha -->
+              <div class="form-group col-full">
+                <label for="op-senha-confirm">Confirmar Senha *</label>
+                <input type="password" id="op-senha-confirm" class="input-control" placeholder="Repita a senha informada" required>
+                <span class="field-error-msg" id="err-op-senha-confirm">As senhas não coincidem.</span>
+              </div>
+
+            </div>
+
+            <div class="form-actions">
+              <button type="reset" class="btn-secondary" id="btn-limpar-op">Limpar Formulário</button>
+              <button type="submit" class="btn-primary" id="btn-salvar-op">
+                <span id="btn-salvar-op-text">Salvar Usuário</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Tabela de Usuários Cadastrados -->
+        <div class="panel-card">
+          <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+              <h2 class="panel-title">Usuários e Colaboradores Cadastrados</h2>
+              <p class="panel-description">Listagem de contas autorizadas a operar o sistema.</p>
+            </div>
+            <!-- Filtro de Cargo -->
+            <div style="display: flex; gap: 0.5rem;">
+              <select id="filtro-cargo-tabela" class="input-control" style="height: 36px; font-size: 0.825rem;">
+                <option value="">Todos os Cargos</option>
+                <option value="ADMIN">Administradores</option>
+                <option value="GERENTE">Gerentes</option>
+                <option value="FUNCIONARIO">Funcionários</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome do Colaborador</th>
+                  <th>E-mail de Login</th>
+                  <th>Nível / Cargo</th>
+                  <th>Status</th>
+                  <th style="text-align: right;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-operadores">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                    Carregando lista de operadores...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- PAINEL 2: HÓSPEDES DO HOTEL (RF-001 E RF-002 INTEGRADOS) -->
+      <div id="pane-hospedes" style="display: none;">
+        <div class="panel-card">
+          <div class="panel-header">
+            <h2 class="panel-title">Hóspedes Registrados no Hotel</h2>
+            <p class="panel-description">Consulta integrada dos hóspedes atendidos no balcão.</p>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Hóspede</th>
+                  <th>E-mail</th>
+                  <th>CPF</th>
+                  <th>Telefone</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-hospedes">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                    Carregando hóspedes...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- MODAL DE EDIÇÃO DE USUÁRIO DO SISTEMA (ACESSO ADMIN)               -->
+    <!-- ================================================================== -->
+    <div id="modal-editar-operador" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-edit-title">
+      <div class="modal-card">
+        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem;">
+          <div>
+            <h2 class="panel-title" id="modal-edit-title">Editar Usuário do Sistema</h2>
+            <p class="panel-description">Atualize os dados cadastrais, cargo ou redefina a senha.</p>
+          </div>
+          <button type="button" class="btn-action-status" id="btn-fechar-modal-edit" aria-label="Fechar janela">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Banner de Feedback do Modal -->
+        <div id="modal-edit-error-banner" class="state-banner state-banner-error" role="alert" style="margin-bottom: 1rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+          </svg>
+          <span id="modal-edit-error-text">Erro ao atualizar dados.</span>
+        </div>
+
+        <form id="form-editar-operador" novalidate>
+          <input type="hidden" id="edit-op-uuid">
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="edit-op-nome">Nome Completo *</label>
+            <input type="text" id="edit-op-nome" class="input-control" required minlength="3">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="edit-op-email">E-mail Corporativo *</label>
+            <input type="email" id="edit-op-email" class="input-control" required>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="edit-op-cargo">Nível de Acesso (Perfil) *</label>
+            <select id="edit-op-cargo" class="input-control" required>
+              <option value="FUNCIONARIO">Funcionário Normal (Recepção / Atendimento)</option>
+              <option value="GERENTE">Gerente Geral (Supervisão e Relatórios)</option>
+              <option value="ADMIN">Administrador (Acesso Irrestrito)</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="edit-op-senha">Nova Senha (deixe em branco para manter a atual)</label>
+            <input type="password" id="edit-op-senha" class="input-control" placeholder="Opcional (mínimo 6 caracteres)" minlength="6">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label for="edit-op-senha-confirm">Confirmar Nova Senha</label>
+            <input type="password" id="edit-op-senha-confirm" class="input-control" placeholder="Repita a nova senha">
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" id="btn-cancelar-modal-edit">Cancelar</button>
+            <button type="submit" class="btn-primary" id="btn-salvar-modal-edit">
+              <span id="btn-salvar-modal-edit-text">Salvar Alterações</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- ==================================================================== -->
+  <!-- SCRIPT CLIENTE SPA MODULAR                                           -->
+  <!-- ==================================================================== -->
+  <script src="/app.js"></script>
+</body>
+</html>

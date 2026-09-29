@@ -6,20 +6,24 @@
 
 -- 1. Criação das Tabelas Estruturais (DDL Idempotente)
 
--- TABELA: tb_operadores (Funcionários autorizados da recepção e gerência)
+-- TABELA: tb_operadores (Funcionários e administradores do sistema hoteleiro)
 CREATE TABLE IF NOT EXISTS tb_operadores (
     id BIGSERIAL PRIMARY KEY,
     uuid_publico VARCHAR(36) NOT NULL UNIQUE,
     nome VARCHAR(120) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
     senha_hash VARCHAR(255) NOT NULL,
-    cargo VARCHAR(50) NOT NULL,
+    cargo VARCHAR(50) NOT NULL, -- 'ADMIN', 'GERENTE', 'FUNCIONARIO'
     is_ativo INTEGER NOT NULL DEFAULT 1,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_operadores_email ON tb_operadores(email);
 CREATE INDEX IF NOT EXISTS idx_operadores_uuid ON tb_operadores(uuid_publico);
+CREATE INDEX IF NOT EXISTS idx_operadores_cargo ON tb_operadores(cargo);
+CREATE INDEX IF NOT EXISTS idx_operadores_ativo ON tb_operadores(is_ativo);
+CREATE INDEX IF NOT EXISTS idx_operadores_cargo_ativo ON tb_operadores(cargo, is_ativo);
 
 
 -- TABELA: tb_sessoes (Controle de sessões ativas via HttpOnly Cookie)

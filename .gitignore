@@ -22,6 +22,7 @@ senhas.md
 Thumbs.db
 
 # Bancos de dados gerados localmente em runtime
+*.db
 *.db-journal
 
 # Pacotes compactados e metadados internos

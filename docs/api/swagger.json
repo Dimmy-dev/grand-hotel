@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Grand Plaza Hotel Management API",
-    "description": "API REST corporativa para autenticação de operadores e cadastro seguro de hóspedes com validação Módulo 11.",
-    "version": "1.0.0"
+    "title": "Grand Plaza Hotel Management API — Gestão de Usuários",
+    "description": "API REST corporativa para autenticação, controle de permissões RBAC e gestão segura de operadores do hotel.",
+    "version": "1.3.0"
   },
   "paths": {
     "/api/v1/auth/login": {
@@ -12,7 +12,7 @@
           "Autenticação"
         ],
         "summary": "Autenticação do Operador",
-        "description": "Autentica um funcionário da recepção/gerência e emite um HttpOnly Cookie seguro.",
+        "description": "Autentica o operador, verifica o hash Bcrypt e emite um HttpOnly Cookie.",
         "operationId": "login_api_v1_auth_login_post",
         "requestBody": {
           "content": {
@@ -52,7 +52,7 @@
           "Autenticação"
         ],
         "summary": "Encerramento de Sessão",
-        "description": "Invalida a sessão ativa do operador no banco e remove o cookie do navegador.",
+        "description": "Invalida a sessão ativa no banco de dados e expira o cookie.",
         "operationId": "logout_api_v1_auth_logout_post",
         "responses": {
           "200": {
@@ -71,8 +71,8 @@
         "tags": [
           "Autenticação"
         ],
-        "summary": "Dados da Sessão Ativa",
-        "description": "Retorna o perfil do operador atualmente logado ou indica sessão vazia.",
+        "summary": "Dados da Sessão Ativa (Para a Topbar)",
+        "description": "Retorna o perfil e nível do operador autenticado para renderização na topbar.",
         "operationId": "me_api_v1_auth_me_get",
         "responses": {
           "200": {
@@ -86,40 +86,20 @@
         }
       }
     },
-    "/api/v1/health": {
-      "get": {
-        "tags": [
-          "Sistema"
-        ],
-        "summary": "Status do Sistema e Banco de Dados",
-        "description": "Retorna o diagnóstico de conectividade com o banco de dados (Supabase vs Fallback).",
-        "operationId": "health_check_api_v1_health_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/hospedes": {
+    "/api/v1/operadores": {
       "post": {
         "tags": [
-          "Hóspedes"
+          "Usuários do Sistema"
         ],
-        "summary": "Cadastro de Novo Hóspede",
-        "description": "Registra um novo hóspede no sistema com validação matemática Módulo 11,\nprevenção contra e-mails e CPFs duplicados e trilha de auditoria LGPD.",
-        "operationId": "cadastrar_hospede_api_v1_hospedes_post",
+        "summary": "Cadastro de Novo Operador do Sistema",
+        "description": "Cadastra um novo usuário do sistema com nível hierárquico (ADMIN, GERENTE, FUNCIONARIO).\nAcesso restrito ao Administrador.",
+        "operationId": "cadastrar_operador_api_v1_operadores_post",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/HospedeCreateSchema"
+                "$ref": "#/components/schemas/OperadorCreateSchema"
               }
             }
           }
@@ -147,11 +127,11 @@
       },
       "get": {
         "tags": [
-          "Hóspedes"
+          "Usuários do Sistema"
         ],
-        "summary": "Listagem e Busca Preditiva de Hóspedes",
-        "description": "Retorna a lista de hóspedes com suporte a busca preditiva por Nome, CPF ou E-mail\ne filtragem por status (todos, ativos, inativos).",
-        "operationId": "listar_hospedes_api_v1_hospedes_get",
+        "summary": "Listagem de Usuários do Sistema",
+        "description": "Retorna a lista de colaboradores e operadores cadastrados no sistema com filtros.",
+        "operationId": "listar_operadores_api_v1_operadores_get",
         "parameters": [
           {
             "name": "q",
@@ -167,6 +147,22 @@
                 }
               ],
               "title": "Q"
+            }
+          },
+          {
+            "name": "cargo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cargo"
             }
           },
           {
@@ -208,61 +204,22 @@
         }
       }
     },
-    "/api/v1/hospedes/{hospede_uuid}": {
-      "get": {
-        "tags": [
-          "Hóspedes"
-        ],
-        "summary": "Detalhes do Hóspede por UUID",
-        "description": "Retorna os dados cadastrais detalhados de um hóspede específico através do seu UUID público.",
-        "operationId": "obter_hospede_api_v1_hospedes__hospede_uuid__get",
-        "parameters": [
-          {
-            "name": "hospede_uuid",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Hospede Uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
+    "/api/v1/operadores/{operador_uuid}": {
       "put": {
         "tags": [
-          "Hóspedes"
+          "Usuários do Sistema"
         ],
-        "summary": "Atualização Cadastral de Hóspede",
-        "description": "Atualiza dados cadastrais de contato do hóspede (nome, e-mail, telefone, observações).\nO CPF permanece estritamente imutável para conformidade legal e auditoria.",
-        "operationId": "atualizar_hospede_api_v1_hospedes__hospede_uuid__put",
+        "summary": "Atualização Cadastral de Operador",
+        "description": "Atualiza dados do operador (Nome, E-mail, Cargo e opcionalmente nova Senha).\nAcesso restrito ao Administrador.",
+        "operationId": "atualizar_operador_api_v1_operadores__operador_uuid__put",
         "parameters": [
           {
-            "name": "hospede_uuid",
+            "name": "operador_uuid",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Hospede Uuid"
+              "title": "Operador Uuid"
             }
           }
         ],
@@ -271,7 +228,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/HospedeUpdateSchema"
+                "$ref": "#/components/schemas/OperadorUpdateSchema"
               }
             }
           }
@@ -298,22 +255,22 @@
         }
       }
     },
-    "/api/v1/hospedes/{hospede_uuid}/status": {
+    "/api/v1/operadores/{operador_uuid}/status": {
       "patch": {
         "tags": [
-          "Hóspedes"
+          "Usuários do Sistema"
         ],
-        "summary": "Alternar Status de Hóspede (Soft Delete / Reativação)",
-        "description": "Ativa ou inativa o cadastro do hóspede de forma lógica (Soft Delete).\nPreserva o histórico referencial e registra evento de auditoria LGPD.",
-        "operationId": "alternar_status_hospede_api_v1_hospedes__hospede_uuid__status_patch",
+        "summary": "Alternar Status de Operador (Soft Delete)",
+        "description": "Ativa ou desativa a conta de um operador de forma lógica.\nAcesso restrito ao Administrador.",
+        "operationId": "alternar_status_operador_api_v1_operadores__operador_uuid__status_patch",
         "parameters": [
           {
-            "name": "hospede_uuid",
+            "name": "operador_uuid",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Hospede Uuid"
+              "title": "Operador Uuid"
             }
           }
         ],
@@ -322,7 +279,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/HospedeStatusSchema"
+                "$ref": "#/components/schemas/OperadorStatusSchema"
               }
             }
           }
@@ -343,6 +300,25 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hospedes": {
+      "get": {
+        "tags": [
+          "Hóspedes"
+        ],
+        "summary": "Listagem de Hóspedes",
+        "operationId": "listar_hospedes_api_v1_hospedes_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
@@ -354,8 +330,8 @@
         "tags": [
           "Documentação"
         ],
-        "summary": "Exporta o arquivo swagger.json para o docs/api",
-        "description": "Salva automaticamente a especificação OpenAPI oficial no caminho docs/api/swagger.json\nexigido na rubrica do edital (Tópico 7 - 3%).",
+        "summary": "Exporta o contrato OpenAPI para docs/api/swagger.json",
+        "description": "Gera o arquivo docs/api/swagger.json com todos os endpoints do RF-003.",
         "operationId": "exportar_swagger_json_export_swagger_json_get",
         "responses": {
           "200": {
@@ -375,7 +351,6 @@
           "Frontend"
         ],
         "summary": "Página Principal SPA",
-        "description": "Serve o arquivo único index.html contendo a aplicação frontend completa.",
         "operationId": "get_index__get",
         "responses": {
           "200": {
@@ -397,7 +372,6 @@
           "Frontend"
         ],
         "summary": "Script Cliente da SPA",
-        "description": "Serve o arquivo de script cliente app.js contendo a máquina de estados e validações.",
         "operationId": "get_app_js_app_js_get",
         "responses": {
           "200": {
@@ -414,6 +388,16 @@
   },
   "components": {
     "schemas": {
+      "CargoEnum": {
+        "type": "string",
+        "enum": [
+          "ADMIN",
+          "GERENTE",
+          "FUNCIONARIO"
+        ],
+        "title": "CargoEnum",
+        "description": "Enumeração formal dos três níveis de privilégio permitidos no sistema."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -427,140 +411,20 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
-      "HospedeCreateSchema": {
-        "properties": {
-          "nome": {
-            "type": "string",
-            "maxLength": 150,
-            "minLength": 3,
-            "title": "Nome",
-            "description": "Nome completo do hóspede"
-          },
-          "email": {
-            "type": "string",
-            "format": "email",
-            "title": "Email",
-            "description": "E-mail corporativo ou pessoal válido (RFC 5322)"
-          },
-          "cpf": {
-            "type": "string",
-            "title": "Cpf",
-            "description": "CPF válido de 11 dígitos numéricos com ou sem pontuação"
-          },
-          "telefone": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 10,
-            "title": "Telefone",
-            "description": "Telefone com código de área (DDD)"
-          },
-          "data_nascimento": {
-            "type": "string",
-            "format": "date",
-            "title": "Data Nascimento",
-            "description": "Data de nascimento no formato AAAA-MM-DD"
-          },
-          "observacoes": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 1000
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Observacoes",
-            "description": "Observações opcionais ou preferências de quarto"
-          }
-        },
-        "type": "object",
-        "required": [
-          "nome",
-          "email",
-          "cpf",
-          "telefone",
-          "data_nascimento"
-        ],
-        "title": "HospedeCreateSchema",
-        "description": "Payload de entrada para o cadastro de hóspedes (RF-001).\nContém validação algorítmica e sanitização anti-XSS."
-      },
-      "HospedeStatusSchema": {
-        "properties": {
-          "is_ativo": {
-            "type": "integer",
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Is Ativo",
-            "description": "Status do cadastro: 1 = Ativo, 0 = Inativo (Soft Delete)"
-          }
-        },
-        "type": "object",
-        "required": [
-          "is_ativo"
-        ],
-        "title": "HospedeStatusSchema",
-        "description": "Payload de entrada para alternância de status ativo/inativo (RF-002 - Soft Delete)."
-      },
-      "HospedeUpdateSchema": {
-        "properties": {
-          "nome": {
-            "type": "string",
-            "maxLength": 150,
-            "minLength": 3,
-            "title": "Nome",
-            "description": "Nome completo do hóspede"
-          },
-          "email": {
-            "type": "string",
-            "format": "email",
-            "title": "Email",
-            "description": "Novo endereço de e-mail válido (RFC 5322)"
-          },
-          "telefone": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 10,
-            "title": "Telefone",
-            "description": "Telefone atualizado com DDD"
-          },
-          "observacoes": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 1000
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Observacoes",
-            "description": "Observações ou notas operacionais atualizadas"
-          }
-        },
-        "type": "object",
-        "required": [
-          "nome",
-          "email",
-          "telefone"
-        ],
-        "title": "HospedeUpdateSchema",
-        "description": "Payload de entrada para atualização cadastral de hóspedes (RF-002).\nO CPF é estritamente omitido deste DTO para garantir sua imutabilidade legal."
-      },
       "LoginSchema": {
         "properties": {
           "email": {
             "type": "string",
             "format": "email",
             "title": "Email",
-            "description": "E-mail institucional do operador"
+            "description": "E-mail institucional do colaborador"
           },
           "senha": {
             "type": "string",
             "maxLength": 100,
             "minLength": 6,
             "title": "Senha",
-            "description": "Senha de acesso em texto puro para conferência do hash"
+            "description": "Senha de acesso em texto para validação contra o hash Bcrypt"
           }
         },
         "type": "object",
@@ -570,6 +434,125 @@
         ],
         "title": "LoginSchema",
         "description": "Payload de entrada para o endpoint de autenticação do operador."
+      },
+      "OperadorCreateSchema": {
+        "properties": {
+          "nome": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 3,
+            "title": "Nome",
+            "description": "Nome completo do colaborador"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "E-mail corporativo institucional único (RFC 5322)"
+          },
+          "senha": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 6,
+            "title": "Senha",
+            "description": "Senha temporária ou definitiva de acesso"
+          },
+          "confirmacao_senha": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 6,
+            "title": "Confirmacao Senha",
+            "description": "Confirmação idêntica da senha"
+          },
+          "cargo": {
+            "$ref": "#/components/schemas/CargoEnum",
+            "description": "Nível de acesso hierárquico: ADMIN, GERENTE ou FUNCIONARIO"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nome",
+          "email",
+          "senha",
+          "confirmacao_senha",
+          "cargo"
+        ],
+        "title": "OperadorCreateSchema",
+        "description": "Payload de entrada para cadastro de novos usuários do sistema (RF-003).\nAcesso restrito ao Administrador do Sistema."
+      },
+      "OperadorStatusSchema": {
+        "properties": {
+          "is_ativo": {
+            "type": "integer",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Is Ativo",
+            "description": "Status do cadastro: 1 = Ativo, 0 = Inativo (Bloqueio de acesso)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_ativo"
+        ],
+        "title": "OperadorStatusSchema",
+        "description": "Payload de entrada para alternância de status ativo/inativo (Soft Delete)."
+      },
+      "OperadorUpdateSchema": {
+        "properties": {
+          "nome": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 3,
+            "title": "Nome",
+            "description": "Nome completo do colaborador"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "E-mail corporativo atualizado"
+          },
+          "cargo": {
+            "$ref": "#/components/schemas/CargoEnum",
+            "description": "Nível de acesso hierárquico atualizado: ADMIN, GERENTE ou FUNCIONARIO"
+          },
+          "senha": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 6
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Senha",
+            "description": "Nova senha (opcional)"
+          },
+          "confirmacao_senha": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 6
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmacao Senha",
+            "description": "Confirmação da nova senha"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nome",
+          "email",
+          "cargo"
+        ],
+        "title": "OperadorUpdateSchema",
+        "description": "Payload de entrada para atualização de dados de operador existente.\nAcesso restrito ao Administrador."
       },
       "ValidationError": {
         "properties": {

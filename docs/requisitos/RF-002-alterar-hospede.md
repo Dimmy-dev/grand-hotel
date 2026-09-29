@@ -5,7 +5,7 @@
 
 ## 1. METADADOS DO PROJETO E DA EQUIPE
 
-### 1.1 Composição da Equipe (GRUPO-06 — SEMANA-02)
+### 1.1 Composição da Equipe (GRUPO-06 — SEMANA-03)
 
 | ID | Nome Completo | Papel Primário | Papel Secundário | E-mail Institucional / Contato |
 | :---: | :--- | :--- | :--- | :--- |
@@ -22,7 +22,7 @@
 
 ### 1.3 Localização dos Artefatos
 
-- **PACOTE_DE_ENTREGA:** `GRUPO-06-SEMANA-02.zip`
+- **PACOTE_DE_ENTREGA:** `GRUPO-06-SEMANA-03.zip`
 - **LINK_REPOSITORIO_GITHUB:** https://github.com/Dimmy-dev/grand-hotel
 - **BRANCH_PRINCIPAL:** `main`
 - **LINK_APLICACAO_DEPLOY:** https://grand-hotel-tawny.vercel.app
