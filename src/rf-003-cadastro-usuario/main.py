@@ -310,6 +310,21 @@ def me(operador: Optional[OperadorModel] = Depends(obter_operador_autenticado)):
     }
 
 
+@app.get("/api/v1/health", summary="Status do Sistema e Diagnóstico do Banco de Dados", tags=["Sistema"])
+def health_check():
+    """
+    Retorna o diagnóstico de conectividade com o banco de dados (Supabase PostgreSQL vs Fallback).
+    """
+    return {
+        "success": True,
+        "data": {
+            "status": "online",
+            "database": DB_DIAGNOSTICS,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    }
+
+
 # ----------------------------------------------------------------------------
 # ROTAS DE GESTÃO DE OPERADORES / USUÁRIOS (RF-003)
 # ----------------------------------------------------------------------------
