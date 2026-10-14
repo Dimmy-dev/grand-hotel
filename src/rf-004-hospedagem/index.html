@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grand Plaza Hotel — Recepção & Rack Hoteleiro (RF-004)</title>
+  
+  <!-- Tipografia Moderna Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ==========================================================================
+       DESIGN SYSTEM ANTISSLOP — GRAND PLAZA HOTEL (RF-004)
+       Diretrizes: regras/front.md, regras/back.md e OWASP Top 10
+       ========================================================================== */
+    :root {
+      --bg-app: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-subtle: #f1f5f9;
+      --bg-card: #ffffff;
+
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --text-placeholder: #94a3b8;
+
+      --brand-navy: #1e3a8a;
+      --brand-navy-dark: #0f172a;
+      --brand-navy-hover: #1d4ed8;
+      --brand-gold: #d97706;
+      --brand-focus-ring: rgba(30, 58, 138, 0.18);
+
+      /* Estados Funcionais */
+      --color-disp-bg: #f0fdf4;
+      --color-disp-border: #86efac;
+      --color-disp-text: #166534;
+
+      --color-ocup-bg: #eff6ff;
+      --color-ocup-border: #bfdbfe;
+      --color-ocup-text: #1e40af;
+
+      --color-limp-bg: #f5f3ff;
+      --color-limp-border: #ddd6fe;
+      --color-limp-text: #5b21b6;
+
+      --color-manut-bg: #fffbeb;
+      --color-manut-border: #fde68a;
+      --color-manut-text: #92400e;
+
+      --color-error-bg: #fef2f2;
+      --color-error-border: #fca5a5;
+      --color-error-text: #991b1b;
+
+      --border-subtle: #e2e8f0;
+      --border-hover: #cbd5e1;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+      --shadow-modal: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+      --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* TOPBAR CORPORATIVA COM PERFIL RBAC */
+    .topbar {
+      background-color: var(--brand-navy-dark);
+      color: #ffffff;
+      padding: 0 24px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-md);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .topbar-logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+    }
+
+    .topbar-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .topbar-subtitle {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      font-weight: 400;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .db-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #cbd5e1;
+    }
+
+    .db-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+    }
+
+    .operator-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 6px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .operator-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+
+    .operator-role {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      background: rgba(59, 130, 246, 0.3);
+      color: #93c5fd;
+      border-radius: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .btn-logout {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #f1f5f9;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition-fast);
+    }
+
+    .btn-logout:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: #ef4444;
+      color: #fca5a5;
+    }
+
+    /* CONTAINER PRINCIPAL */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 28px 24px;
+    }
+
+    /* STATS HEADER */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg-surface);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .stat-value {
+      font-size: 1.85rem;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.03em;
+    }
+
+    .stat-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    /* FILTROS E BARRA DE CONTROLE DO RACK */
+    .rack-controls {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: var(--bg-subtle);
+      border: 1px solid transparent;
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-btn:hover {
+      background: #e2e8f0;
+      color: var(--text-main);
+    }
+
+    .filter-btn.active {
+      background: var(--brand-navy);
+      color: #ffffff;
+      border-color: var(--brand-navy);
+      font-weight: 600;
+    }
+
+    .select-category {
+      height: 38px;
+      padding: 0 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      font-size: 0.85rem;
+      color: var(--text-main);
+      background-color: var(--bg-surface);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .select-category:focus {
+      border-color: var(--brand-navy);
+      box-shadow: 0 0 0 3px var(--brand-focus-ring);
+    }
+
+    .btn-primary {
+      background: var(--brand-navy);
+      color: #ffffff;
+      border: none;
+      padding: 9px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition-fast);
+    }
+
+    .btn-primary:hover {
+      background: var(--brand-navy-hover);
+    }
+
+    /* GRID DO RACK HOTELEIRO */
+    .rooms-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .room-card {
+      background: var(--bg-surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-subtle);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+      position: relative;
+    }
+
+    .room-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: #cbd5e1;
+    }
+
+    .room-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .room-number-wrap {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .room-number {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.03em;
+    }
+
+    .room-floor {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .badge-disponivel {
+      background: var(--color-disp-bg);
+      border: 1px solid var(--color-disp-border);
+      color: var(--color-disp-text);
+    }
+
+    .badge-ocupado {
+      background: var(--color-ocup-bg);
+      border: 1px solid var(--color-ocup-border);
+      color: var(--color-ocup-text);
+    }
+
+    .badge-limpeza {
+      background: var(--color-limp-bg);
+      border: 1px solid var(--color-limp-border);
+      color: var(--color-limp-text);
+    }
+
+    .badge-manutencao {
+      background: var(--color-manut-bg);
+      border: 1px solid var(--color-manut-border);
+      color: var(--color-manut-text);
+    }
+
+    .room-details {
+      margin-bottom: 16px;
+    }
+
+    .room-category {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .room-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      min-height: 38px;
+    }
+
+    .room-specs {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      padding: 8px 12px;
+      background: var(--bg-subtle);
+      border-radius: var(--radius-sm);
+    }
+
+    .spec-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .room-guest-box {
+      margin: 12px 0;
+      padding: 10px 12px;
+      background: #f8fafc;
+      border-left: 3px solid var(--brand-navy);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+
+    .guest-name-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .guest-name-val {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .guest-dates-val {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .room-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .room-price-val {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--brand-navy);
+    }
+
+    .room-price-unit {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .room-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-action {
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition-fast);
+    }
+
+    .btn-action-checkin {
+      background: var(--brand-navy);
+      color: #ffffff;
+    }
+
+    .btn-action-checkin:hover {
+      background: var(--brand-navy-hover);
+    }
+
+    .btn-action-checkout {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #991b1b;
+    }
+
+    .btn-action-checkout:hover {
+      background: #fee2e2;
+      border-color: #f87171;
+    }
+
+    .btn-action-limpar {
+      background: #f5f3ff;
+      border-color: #ddd6fe;
+      color: #5b21b6;
+    }
+
+    .btn-action-limpar:hover {
+      background: #ede9fe;
+    }
+
+    /* MODAIS */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 200;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity var(--transition-fast), visibility var(--transition-fast);
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-box {
+      background: var(--bg-surface);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 560px;
+      box-shadow: var(--shadow-modal);
+      overflow: hidden;
+      transform: scale(0.96);
+      transition: transform var(--transition-fast);
+    }
+
+    .modal-overlay.active .modal-box {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f8fafc;
+    }
+
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+    }
+
+    .modal-close:hover {
+      background: #e2e8f0;
+      color: var(--text-main);
+    }
+
+    .modal-body {
+      padding: 24px;
+      max-height: 75vh;
+      overflow-y: auto;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      height: 42px;
+      padding: 0 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      font-size: 0.9rem;
+      color: var(--text-main);
+      background: #ffffff;
+      outline: none;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .form-control:focus {
+      border-color: var(--brand-navy);
+      box-shadow: 0 0 0 3px var(--brand-focus-ring);
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      background: #f8fafc;
+    }
+
+    .btn-secondary {
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 9px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-secondary:hover {
+      background: #f1f5f9;
+      color: var(--text-main);
+    }
+
+    /* EXTRATO DE CHECKOUT */
+    .invoice-card {
+      background: #f8fafc;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+
+    .invoice-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 0.88rem;
+      border-bottom: 1px dashed var(--border-subtle);
+    }
+
+    .invoice-row:last-child {
+      border-bottom: none;
+      padding-top: 14px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--brand-navy);
+    }
+
+    /* TOAST DE FEEDBACK */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      font-size: 0.88rem;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn 250ms ease forwards;
+      min-width: 300px;
+      max-width: 440px;
+    }
+
+    .toast-success {
+      background: #166534;
+      color: #ffffff;
+    }
+
+    .toast-error {
+      background: #991b1b;
+      color: #ffffff;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOPBAR INFORMATIVA -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-3M9 9h1M9 13h1M9 17h1"/>
+        </svg>
+      </div>
+      <div>
+        <div class="topbar-title">Grand Plaza Hotel</div>
+        <div class="topbar-subtitle">Recepção & Rack Hoteleiro • RF-004</div>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <div class="db-badge">
+        <span class="db-dot" id="db-indicator"></span>
+        <span id="db-name">Conectando...</span>
+      </div>
+
+      <div class="operator-card" id="operator-info">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span class="operator-name" id="operator-name">Identificando...</span>
+        <span class="operator-role" id="operator-role">...</span>
+      </div>
+
+      <button class="btn-logout" id="btn-logout" title="Encerrar sessão de trabalho">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+        </svg>
+        Sair
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="container">
+
+    <!-- CARDS DE MÉTRICAS OPERACIONAIS -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">
+          Quartos Disponíveis
+          <span class="stat-indicator" style="background-color: #22c55e;"></span>
+        </div>
+        <div class="stat-value" id="stat-disponiveis">-</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">
+          Quartos Ocupados
+          <span class="stat-indicator" style="background-color: #3b82f6;"></span>
+        </div>
+        <div class="stat-value" id="stat-ocupados">-</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">
+          Aguardando Limpeza
+          <span class="stat-indicator" style="background-color: #a855f7;"></span>
+        </div>
+        <div class="stat-value" id="stat-limpeza">-</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">
+          Em Manutenção
+          <span class="stat-indicator" style="background-color: #f59e0b;"></span>
+        </div>
+        <div class="stat-value" id="stat-manutencao">-</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">
+          Taxa de Ocupação
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <div class="stat-value" id="stat-taxa">- %</div>
+      </div>
+    </section>
+
+    <!-- BARRA DE CONTROLE E FILTROS DO RACK -->
+    <section class="rack-controls">
+      <div class="filter-group">
+        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-right: 6px;">Status:</span>
+        <button class="filter-btn active" data-filter="TODOS">Todos (<span id="count-todos">0</span>)</button>
+        <button class="filter-btn" data-filter="DISPONIVEL">Disponíveis (<span id="count-disp">0</span>)</button>
+        <button class="filter-btn" data-filter="OCUPADO">Ocupados (<span id="count-ocup">0</span>)</button>
+        <button class="filter-btn" data-filter="LIMPEZA">Limpeza (<span id="count-limp">0</span>)</button>
+        <button class="filter-btn" data-filter="MANUTENCAO">Manutenção (<span id="count-manut">0</span>)</button>
+      </div>
+
+      <div class="filter-group">
+        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Categoria:</span>
+        <select class="select-category" id="filter-category">
+          <option value="">Todas as Categorias</option>
+          <option value="STANDARD">Standard</option>
+          <option value="LUXO">Luxo</option>
+          <option value="PRESIDENCIAL">Presidencial</option>
+        </select>
+
+        <button class="btn-primary" id="btn-atualizar-rack" title="Sincronizar Rack em Tempo Real">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 4v6h-6M1 20v-6h6"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          Sincronizar
+        </button>
+      </div>
+    </section>
+
+    <!-- GRID VISUAL DE QUARTOS (RACK HOTELEIRO) -->
+    <section class="rooms-grid" id="rooms-grid">
+      <!-- Inserido dinamicamente via app.js -->
+    </section>
+
+  </main>
+
+  <!-- MODAL DE CHECK-IN ÁGIL -->
+  <div class="modal-overlay" id="modal-checkin">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">Novo Check-in — Quarto <span id="checkin-modal-quarto-num">...</span></div>
+        <button class="modal-close" id="btn-close-checkin-modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="checkin-quarto-uuid">
+        <input type="hidden" id="checkin-quarto-tarifa">
+
+        <div class="form-group">
+          <label class="form-label" for="checkin-hospede-select">Hóspede Titular *</label>
+          <select class="form-control" id="checkin-hospede-select">
+            <option value="">Carregando hóspedes cadastrados...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="checkin-data-saida">Data e Hora Prevista de Checkout *</label>
+          <input type="datetime-local" class="form-control" id="checkin-data-saida" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="checkin-acompanhantes">Acompanhantes (separados por vírgula)</label>
+          <input type="text" class="form-control" id="checkin-acompanhantes" placeholder="Ex: Maria da Silva, Pedro Albuquerque">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="checkin-observacoes">Observações Especiais</label>
+          <input type="text" class="form-control" id="checkin-observacoes" placeholder="Ex: Berço extra no quarto, andar silencioso">
+        </div>
+
+        <div style="background: var(--bg-subtle); padding: 14px; border-radius: var(--radius-md); font-size: 0.85rem; color: var(--text-muted);">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span>Tarifa Diária Contratual:</span>
+            <strong style="color: var(--brand-navy);" id="checkin-tarifa-preview">R$ 0,00</strong>
+          </div>
+          <small>O valor da diária é congelado no ato do check-in garantindo a integridade contratual da estadia.</small>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btn-cancelar-checkin">Cancelar</button>
+        <button class="btn-primary" id="btn-confirmar-checkin">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Confirmar Check-in
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE CHECK-OUT & FATURAMENTO -->
+  <div class="modal-overlay" id="modal-checkout">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">Encerrar Hospedagem & Faturamento</div>
+        <button class="modal-close" id="btn-close-checkout-modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="checkout-hospedagem-uuid">
+
+        <div class="invoice-card">
+          <div class="invoice-row">
+            <span>Acomodação:</span>
+            <strong id="checkout-quarto-num">-</strong>
+          </div>
+          <div class="invoice-row">
+            <span>Hóspede Titular:</span>
+            <strong id="checkout-hospede-nome">-</strong>
+          </div>
+          <div class="invoice-row">
+            <span>Data de Entrada (Check-in):</span>
+            <span id="checkout-data-entrada">-</span>
+          </div>
+          <div class="invoice-row">
+            <span>Data de Saída (Check-out):</span>
+            <span id="checkout-data-saida">-</span>
+          </div>
+          <div class="invoice-row">
+            <span>Tarifa Diária Aplicada:</span>
+            <span id="checkout-tarifa-diaria">-</span>
+          </div>
+          <div class="invoice-row">
+            <span>Total de Diárias Apuradas:</span>
+            <strong id="checkout-diarias-count">-</strong>
+          </div>
+          <div class="invoice-row">
+            <span>VALOR TOTAL A FATURAR:</span>
+            <span id="checkout-valor-total">R$ 0,00</span>
+          </div>
+        </div>
+
+        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">
+          Ao confirmar o check-out, a estadia será finalizada no sistema financeiro e a acomodação entrará imediatamente no fluxo de <strong>LIMPEZA</strong> da governança.
+        </p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btn-cancelar-checkout">Voltar</button>
+        <button class="btn-primary" id="btn-confirmar-checkout" style="background-color: #dc2626;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <line x1="2" y1="10" x2="22" y2="10"/>
+          </svg>
+          Concluir Faturamento & Checkout
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE LOGIN (QUANDO NÃO AUTENTICADO) -->
+  <div class="modal-overlay" id="modal-login">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <div class="modal-title">Autenticação do Operador</div>
+      </div>
+      <div class="modal-body">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div class="topbar-logo-icon" style="margin: 0 auto 12px; width: 48px; height: 48px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-3M9 9h1M9 13h1M9 17h1"/>
+            </svg>
+          </div>
+          <h3 style="font-size: 1.1rem; color: var(--text-main);">Grand Plaza Hotel</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">Acesso restrito à equipe operacional e recepção</p>
+        </div>
+
+        <form id="form-login">
+          <div class="form-group">
+            <label class="form-label" for="login-email">E-mail Corporativo</label>
+            <input type="email" class="form-control" id="login-email" value="recepcao@grandplaza.com" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="login-senha">Senha de Acesso</label>
+            <input type="password" class="form-control" id="login-senha" value="Hotel@2026Recep" required>
+          </div>
+
+          <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; height: 44px; margin-top: 10px;">
+            Acessar Sistema
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTAINER DE TOASTS -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- SCRIPT CLIENTE -->
+  <script src="/app.js"></script>
+</body>
+</html>

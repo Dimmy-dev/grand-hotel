@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Grand Plaza Hotel Management API — Gestão de Usuários",
-    "description": "API REST corporativa para autenticação, controle de permissões RBAC e gestão segura de operadores do hotel.",
-    "version": "1.3.0"
+    "title": "Grand Plaza Hotel Management API — Sistema de Hospedagem",
+    "description": "API REST corporativa para ciclo completo de hospedagem, alocação de quartos, check-in atômico, check-out com faturamento e rack hoteleiro.",
+    "version": "1.4.0"
   },
   "paths": {
     "/api/v1/auth/login": {
@@ -11,8 +11,8 @@
         "tags": [
           "Autenticação"
         ],
-        "summary": "Autenticação do Operador",
-        "description": "Autentica o operador, verifica o hash Bcrypt e emite um HttpOnly Cookie.",
+        "summary": "Login",
+        "description": "Autentica o operador e emite cookie HttpOnly criptografado.",
         "operationId": "login_api_v1_auth_login_post",
         "requestBody": {
           "content": {
@@ -29,7 +29,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeResponse_OperadorResponseSchema_"
+                }
               }
             }
           },
@@ -51,15 +53,17 @@
         "tags": [
           "Autenticação"
         ],
-        "summary": "Encerramento de Sessão",
-        "description": "Invalida a sessão ativa no banco de dados e expira o cookie.",
+        "summary": "Logout",
+        "description": "Encerra a sessão ativa e revoga o cookie.",
         "operationId": "logout_api_v1_auth_logout_post",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeResponse_dict_"
+                }
               }
             }
           }
@@ -71,65 +75,242 @@
         "tags": [
           "Autenticação"
         ],
-        "summary": "Dados da Sessão Ativa (Para a Topbar)",
-        "description": "Retorna o perfil e nível do operador autenticado para renderização na topbar.",
+        "summary": "Me",
+        "description": "Retorna os dados do operador atualmente conectado.",
         "operationId": "me_api_v1_auth_me_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeResponse_OperadorResponseSchema_"
+                }
               }
             }
           }
         }
       }
     },
-    "/api/v1/health": {
+    "/api/v1/acomodacoes": {
       "get": {
         "tags": [
-          "Sistema"
+          "Acomodações"
         ],
-        "summary": "Status do Sistema e Diagnóstico do Banco de Dados",
-        "description": "Retorna o diagnóstico de conectividade com o banco de dados (Supabase PostgreSQL vs Fallback).",
-        "operationId": "health_check_api_v1_health_get",
+        "summary": "Listar Todas Acomodacoes",
+        "description": "Retorna o inventário completo de acomodações para montagem do Rack Hoteleiro.\nEnriquece acomodações ocupadas com os dados resumidos do hóspede e estadia em curso.",
+        "operationId": "listar_todas_acomodacoes_api_v1_acomodacoes_get",
+        "parameters": [
+          {
+            "name": "categoria",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filtrar por STANDARD, LUXO, PRESIDENCIAL",
+              "title": "Categoria"
+            },
+            "description": "Filtrar por STANDARD, LUXO, PRESIDENCIAL"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filtrar por DISPONIVEL, OCUPADO, LIMPEZA, MANUTENCAO",
+              "title": "Status"
+            },
+            "description": "Filtrar por DISPONIVEL, OCUPADO, LIMPEZA, MANUTENCAO"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeResponse_List_AcomodacaoResponseSchema__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
               }
             }
           }
         }
       }
     },
-    "/api/v1/operadores": {
-      "post": {
+    "/api/v1/acomodacoes/disponiveis": {
+      "get": {
         "tags": [
-          "Usuários do Sistema"
+          "Acomodações"
         ],
-        "summary": "Cadastro de Novo Operador do Sistema",
-        "description": "Cadastra um novo usuário do sistema com nível hierárquico (ADMIN, GERENTE, FUNCIONARIO).\nAcesso restrito ao Administrador.",
-        "operationId": "cadastrar_operador_api_v1_operadores_post",
+        "summary": "Listar Acomodacoes Disponiveis",
+        "description": "Retorna apenas quartos com status 'DISPONIVEL' aptos a receber novo check-in imediato.",
+        "operationId": "listar_acomodacoes_disponiveis_api_v1_acomodacoes_disponiveis_get",
+        "parameters": [
+          {
+            "name": "categoria",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filtrar por STANDARD, LUXO, PRESIDENCIAL",
+              "title": "Categoria"
+            },
+            "description": "Filtrar por STANDARD, LUXO, PRESIDENCIAL"
+          },
+          {
+            "name": "capacidade_min",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Capacidade mínima de hóspedes",
+              "title": "Capacidade Min"
+            },
+            "description": "Capacidade mínima de hóspedes"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeResponse_List_AcomodacaoResponseSchema__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/acomodacoes/{id_ou_uuid}/status": {
+      "patch": {
+        "tags": [
+          "Acomodações"
+        ],
+        "summary": "Atualizar Status Acomodacao",
+        "description": "Permite transições de governança e manutenção (ex: Quarto limpo passa de LIMPEZA para DISPONIVEL).",
+        "operationId": "atualizar_status_acomodacao_api_v1_acomodacoes__id_ou_uuid__status_patch",
+        "parameters": [
+          {
+            "name": "id_ou_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id Ou Uuid"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/OperadorCreateSchema"
+                "$ref": "#/components/schemas/AcomodacaoStatusUpdateSchema"
               }
             }
           }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeResponse_AcomodacaoResponseSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hospedagens/checkin": {
+      "post": {
+        "tags": [
+          "Hospedagens"
+        ],
+        "summary": "Realizar Checkin",
+        "description": "Realiza o check-in ágil do hóspede em uma acomodação disponível.\nGarante atomicidade com bloqueio exclusivo anti-overbooking.",
+        "operationId": "realizar_checkin_api_v1_hospedagens_checkin_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckinRequestSchema"
+              }
+            }
+          },
+          "required": true
         },
         "responses": {
           "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeResponse_dict_"
+                }
               }
             }
           },
@@ -144,181 +325,66 @@
             }
           }
         }
-      },
+      }
+    },
+    "/api/v1/hospedagens/{id_ou_uuid}/checkout": {
+      "post": {
+        "tags": [
+          "Hospedagens"
+        ],
+        "summary": "Realizar Checkout",
+        "description": "Finaliza a hospedagem, calcula automaticamente o número de diárias consumidas\n(mínimo de 1 diária) e o valor total devido, liberando o quarto para limpeza.",
+        "operationId": "realizar_checkout_api_v1_hospedagens__id_ou_uuid__checkout_post",
+        "parameters": [
+          {
+            "name": "id_ou_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id Ou Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeResponse_CheckoutResponseSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hospedagens/ativas": {
       "get": {
         "tags": [
-          "Usuários do Sistema"
+          "Hospedagens"
         ],
-        "summary": "Listagem de Usuários do Sistema",
-        "description": "Retorna a lista de colaboradores e operadores cadastrados no sistema com filtros.",
-        "operationId": "listar_operadores_api_v1_operadores_get",
-        "parameters": [
-          {
-            "name": "q",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Q"
-            }
-          },
-          {
-            "name": "cargo",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Cargo"
-            }
-          },
-          {
-            "name": "status_filtro",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Status Filtro"
-            }
-          }
-        ],
+        "summary": "Listar Hospedagens Ativas",
+        "description": "Lista todas as hospedagens em curso no hotel.",
+        "operationId": "listar_hospedagens_ativas_api_v1_hospedagens_ativas_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/operadores/{operador_uuid}": {
-      "put": {
-        "tags": [
-          "Usuários do Sistema"
-        ],
-        "summary": "Atualização Cadastral de Operador",
-        "description": "Atualiza dados do operador (Nome, E-mail, Cargo e opcionalmente nova Senha).\nAcesso restrito ao Administrador.",
-        "operationId": "atualizar_operador_api_v1_operadores__operador_uuid__put",
-        "parameters": [
-          {
-            "name": "operador_uuid",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Operador Uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OperadorUpdateSchema"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/operadores/{operador_uuid}/status": {
-      "patch": {
-        "tags": [
-          "Usuários do Sistema"
-        ],
-        "summary": "Alternar Status de Operador (Soft Delete)",
-        "description": "Ativa ou desativa a conta de um operador de forma lógica.\nAcesso restrito ao Administrador.",
-        "operationId": "alternar_status_operador_api_v1_operadores__operador_uuid__status_patch",
-        "parameters": [
-          {
-            "name": "operador_uuid",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Operador Uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OperadorStatusSchema"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/EnvelopeResponse_List_dict__"
                 }
               }
             }
@@ -331,28 +397,61 @@
         "tags": [
           "Hóspedes"
         ],
-        "summary": "Listagem de Hóspedes",
-        "operationId": "listar_hospedes_api_v1_hospedes_get",
+        "summary": "Listar Hospedes Para Selecao",
+        "description": "Lista hóspedes ativos para o modal de seleção do Check-in.",
+        "operationId": "listar_hospedes_para_selecao_api_v1_hospedes_get",
+        "parameters": [
+          {
+            "name": "termo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Buscar por nome ou CPF",
+              "title": "Termo"
+            },
+            "description": "Buscar por nome ou CPF"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeResponse_List_HospedeSimpleSchema__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
               }
             }
           }
         }
       }
     },
-    "/export-swagger-json": {
+    "/api/v1/diagnostico/banco": {
       "get": {
         "tags": [
-          "Documentação"
+          "Diagnóstico"
         ],
-        "summary": "Exporta o contrato OpenAPI para docs/api/swagger.json",
-        "description": "Gera o arquivo docs/api/swagger.json com todos os endpoints do RF-003.",
-        "operationId": "exportar_swagger_json_export_swagger_json_get",
+        "summary": "Diagnostico Banco",
+        "description": "Retorna o status da persistência e contadores de entidades.",
+        "operationId": "diagnostico_banco_api_v1_diagnostico_banco_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -370,8 +469,9 @@
         "tags": [
           "Frontend"
         ],
-        "summary": "Página Principal SPA",
-        "operationId": "get_index__get",
+        "summary": "Servir Spa",
+        "description": "Entrega a SPA index.html do RF-004.",
+        "operationId": "servir_spa__get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -391,8 +491,9 @@
         "tags": [
           "Frontend"
         ],
-        "summary": "Script Cliente da SPA",
-        "operationId": "get_app_js_app_js_get",
+        "summary": "Servir Javascript",
+        "description": "Entrega o script app.js da SPA.",
+        "operationId": "servir_javascript_app_js_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -408,15 +509,488 @@
   },
   "components": {
     "schemas": {
-      "CargoEnum": {
-        "type": "string",
-        "enum": [
-          "ADMIN",
-          "GERENTE",
-          "FUNCIONARIO"
+      "AcomodacaoResponseSchema": {
+        "properties": {
+          "uuid_publico": {
+            "type": "string",
+            "title": "Uuid Publico"
+          },
+          "numero": {
+            "type": "string",
+            "title": "Numero"
+          },
+          "categoria": {
+            "type": "string",
+            "title": "Categoria"
+          },
+          "capacidade": {
+            "type": "integer",
+            "title": "Capacidade"
+          },
+          "tarifa_base": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Tarifa Base"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "andar": {
+            "type": "integer",
+            "title": "Andar"
+          },
+          "descricao": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descricao"
+          },
+          "hospedagem_ativa": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hospedagem Ativa"
+          }
+        },
+        "type": "object",
+        "required": [
+          "uuid_publico",
+          "numero",
+          "categoria",
+          "capacidade",
+          "tarifa_base",
+          "status",
+          "andar"
         ],
-        "title": "CargoEnum",
-        "description": "Enumeração formal dos três níveis de privilégio permitidos no sistema."
+        "title": "AcomodacaoResponseSchema"
+      },
+      "AcomodacaoStatusUpdateSchema": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Novo status: DISPONIVEL, OCUPADO, MANUTENCAO, LIMPEZA"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "AcomodacaoStatusUpdateSchema"
+      },
+      "CheckinRequestSchema": {
+        "properties": {
+          "uuid_hospede": {
+            "type": "string",
+            "title": "Uuid Hospede",
+            "description": "UUID público do hóspede cadastrado"
+          },
+          "uuid_acomodacao": {
+            "type": "string",
+            "title": "Uuid Acomodacao",
+            "description": "UUID público do quarto a ser ocupado"
+          },
+          "data_prevista_checkout": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Data Prevista Checkout",
+            "description": "Data e hora prevista para saída"
+          },
+          "acompanhantes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acompanhantes",
+            "description": "Nomes dos acompanhantes"
+          },
+          "observacoes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observacoes",
+            "description": "Observações especiais da estadia"
+          }
+        },
+        "type": "object",
+        "required": [
+          "uuid_hospede",
+          "uuid_acomodacao",
+          "data_prevista_checkout"
+        ],
+        "title": "CheckinRequestSchema"
+      },
+      "CheckoutResponseSchema": {
+        "properties": {
+          "uuid_publico": {
+            "type": "string",
+            "title": "Uuid Publico"
+          },
+          "hospede_nome": {
+            "type": "string",
+            "title": "Hospede Nome"
+          },
+          "hospede_cpf": {
+            "type": "string",
+            "title": "Hospede Cpf"
+          },
+          "acomodacao_numero": {
+            "type": "string",
+            "title": "Acomodacao Numero"
+          },
+          "acomodacao_categoria": {
+            "type": "string",
+            "title": "Acomodacao Categoria"
+          },
+          "data_checkin": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Data Checkin"
+          },
+          "data_checkout": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Data Checkout"
+          },
+          "num_diarias": {
+            "type": "integer",
+            "title": "Num Diarias"
+          },
+          "tarifa_diaria_aplicada": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Tarifa Diaria Aplicada"
+          },
+          "valor_total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Valor Total"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "quarto_status_atual": {
+            "type": "string",
+            "title": "Quarto Status Atual",
+            "default": "LIMPEZA"
+          }
+        },
+        "type": "object",
+        "required": [
+          "uuid_publico",
+          "hospede_nome",
+          "hospede_cpf",
+          "acomodacao_numero",
+          "acomodacao_categoria",
+          "data_checkin",
+          "data_checkout",
+          "num_diarias",
+          "tarifa_diaria_aplicada",
+          "valor_total",
+          "status"
+        ],
+        "title": "CheckoutResponseSchema"
+      },
+      "EnvelopeResponse_AcomodacaoResponseSchema_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AcomodacaoResponseSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "EnvelopeResponse[AcomodacaoResponseSchema]"
+      },
+      "EnvelopeResponse_CheckoutResponseSchema_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CheckoutResponseSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "EnvelopeResponse[CheckoutResponseSchema]"
+      },
+      "EnvelopeResponse_List_AcomodacaoResponseSchema__": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/AcomodacaoResponseSchema"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "EnvelopeResponse[List[AcomodacaoResponseSchema]]"
+      },
+      "EnvelopeResponse_List_HospedeSimpleSchema__": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/HospedeSimpleSchema"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "EnvelopeResponse[List[HospedeSimpleSchema]]"
+      },
+      "EnvelopeResponse_List_dict__": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "EnvelopeResponse[List[dict]]"
+      },
+      "EnvelopeResponse_OperadorResponseSchema_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OperadorResponseSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "EnvelopeResponse[OperadorResponseSchema]"
+      },
+      "EnvelopeResponse_dict_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "EnvelopeResponse[dict]"
+      },
+      "ErrorDetail": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorDetail"
       },
       "HTTPValidationError": {
         "properties": {
@@ -431,20 +1005,57 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "HospedeSimpleSchema": {
+        "properties": {
+          "uuid_publico": {
+            "type": "string",
+            "title": "Uuid Publico"
+          },
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "cpf": {
+            "type": "string",
+            "title": "Cpf"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "telefone": {
+            "type": "string",
+            "title": "Telefone"
+          },
+          "is_ativo": {
+            "type": "integer",
+            "title": "Is Ativo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "uuid_publico",
+          "nome",
+          "cpf",
+          "email",
+          "telefone",
+          "is_ativo"
+        ],
+        "title": "HospedeSimpleSchema"
+      },
       "LoginSchema": {
         "properties": {
           "email": {
             "type": "string",
             "format": "email",
             "title": "Email",
-            "description": "E-mail institucional do colaborador"
+            "example": "recepcao@grandplaza.com"
           },
           "senha": {
             "type": "string",
-            "maxLength": 100,
+            "maxLength": 128,
             "minLength": 6,
-            "title": "Senha",
-            "description": "Senha de acesso em texto para validação contra o hash Bcrypt"
+            "title": "Senha"
           }
         },
         "type": "object",
@@ -452,127 +1063,47 @@
           "email",
           "senha"
         ],
-        "title": "LoginSchema",
-        "description": "Payload de entrada para o endpoint de autenticação do operador."
+        "title": "LoginSchema"
       },
-      "OperadorCreateSchema": {
+      "OperadorResponseSchema": {
         "properties": {
+          "uuid_publico": {
+            "type": "string",
+            "title": "Uuid Publico"
+          },
           "nome": {
             "type": "string",
-            "maxLength": 120,
-            "minLength": 3,
-            "title": "Nome",
-            "description": "Nome completo do colaborador"
+            "title": "Nome"
           },
           "email": {
             "type": "string",
             "format": "email",
-            "title": "Email",
-            "description": "E-mail corporativo institucional único (RFC 5322)"
-          },
-          "senha": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 6,
-            "title": "Senha",
-            "description": "Senha temporária ou definitiva de acesso"
-          },
-          "confirmacao_senha": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 6,
-            "title": "Confirmacao Senha",
-            "description": "Confirmação idêntica da senha"
+            "title": "Email"
           },
           "cargo": {
-            "$ref": "#/components/schemas/CargoEnum",
-            "description": "Nível de acesso hierárquico: ADMIN, GERENTE ou FUNCIONARIO"
-          }
-        },
-        "type": "object",
-        "required": [
-          "nome",
-          "email",
-          "senha",
-          "confirmacao_senha",
-          "cargo"
-        ],
-        "title": "OperadorCreateSchema",
-        "description": "Payload de entrada para cadastro de novos usuários do sistema (RF-003).\nAcesso restrito ao Administrador do Sistema."
-      },
-      "OperadorStatusSchema": {
-        "properties": {
+            "type": "string",
+            "title": "Cargo"
+          },
           "is_ativo": {
             "type": "integer",
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Is Ativo",
-            "description": "Status do cadastro: 1 = Ativo, 0 = Inativo (Bloqueio de acesso)"
+            "title": "Is Ativo"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
           }
         },
         "type": "object",
         "required": [
-          "is_ativo"
-        ],
-        "title": "OperadorStatusSchema",
-        "description": "Payload de entrada para alternância de status ativo/inativo (Soft Delete)."
-      },
-      "OperadorUpdateSchema": {
-        "properties": {
-          "nome": {
-            "type": "string",
-            "maxLength": 120,
-            "minLength": 3,
-            "title": "Nome",
-            "description": "Nome completo do colaborador"
-          },
-          "email": {
-            "type": "string",
-            "format": "email",
-            "title": "Email",
-            "description": "E-mail corporativo atualizado"
-          },
-          "cargo": {
-            "$ref": "#/components/schemas/CargoEnum",
-            "description": "Nível de acesso hierárquico atualizado: ADMIN, GERENTE ou FUNCIONARIO"
-          },
-          "senha": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 100,
-                "minLength": 6
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Senha",
-            "description": "Nova senha (opcional)"
-          },
-          "confirmacao_senha": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 100,
-                "minLength": 6
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Confirmacao Senha",
-            "description": "Confirmação da nova senha"
-          }
-        },
-        "type": "object",
-        "required": [
+          "uuid_publico",
           "nome",
           "email",
-          "cargo"
+          "cargo",
+          "is_ativo",
+          "created_at"
         ],
-        "title": "OperadorUpdateSchema",
-        "description": "Payload de entrada para atualização de dados de operador existente.\nAcesso restrito ao Administrador."
+        "title": "OperadorResponseSchema"
       },
       "ValidationError": {
         "properties": {

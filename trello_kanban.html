@@ -1,0 +1,1696 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quadro Trello — Grand Plaza Hotel Management | Sprints & Entregas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ==========================================================================
+       DESIGN SYSTEM CORPORATIVO GRAND PLAZA HOTEL — REGRA ANTISSLOP
+       ========================================================================== */
+    :root {
+      --bg-board: #0b1329;
+      --bg-board-gradient: linear-gradient(135deg, #0b1329 0%, #111d40 50%, #0d1733 100%);
+      --bg-column: #16203c;
+      --bg-column-header: rgba(22, 32, 60, 0.95);
+      --bg-card: #1f2d52;
+      --bg-card-hover: #263763;
+      --border-subtle: #2d3f70;
+      --border-highlight: #3b82f6;
+
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+
+      --brand-navy: #1e3a8a;
+      --brand-blue: #3b82f6;
+      --brand-blue-hover: #2563eb;
+
+      /* Etiquetas Semânticas */
+      --tag-green-bg: rgba(16, 185, 129, 0.18);
+      --tag-green-text: #34d399;
+      --tag-green-border: rgba(16, 185, 129, 0.35);
+
+      --tag-blue-bg: rgba(59, 130, 246, 0.18);
+      --tag-blue-text: #60a5fa;
+      --tag-blue-border: rgba(59, 130, 246, 0.35);
+
+      --tag-amber-bg: rgba(245, 158, 11, 0.18);
+      --tag-amber-text: #fbbf24;
+      --tag-amber-border: rgba(245, 158, 11, 0.35);
+
+      --tag-purple-bg: rgba(168, 85, 247, 0.18);
+      --tag-purple-text: #c084fc;
+      --tag-purple-border: rgba(168, 85, 247, 0.35);
+
+      --tag-rose-bg: rgba(244, 63, 94, 0.18);
+      --tag-rose-text: #fb7185;
+      --tag-rose-border: rgba(244, 63, 94, 0.35);
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+      --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.45);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-board);
+      background-image: var(--bg-board-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* --- TOPO / HEADER DO QUADRO --- */
+    .board-header {
+      background: rgba(11, 19, 41, 0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon-box {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand-icon-box svg {
+      width: 22px;
+      height: 22px;
+      color: #ffffff;
+    }
+
+    .brand-info h1 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: #ffffff;
+    }
+
+    .brand-info p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .search-box {
+      position: relative;
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 15px;
+      height: 15px;
+      color: var(--text-dim);
+    }
+
+    .search-box input {
+      background: rgba(22, 32, 60, 0.8);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 7px 12px 7px 32px;
+      font-size: 0.8rem;
+      color: #fff;
+      outline: none;
+      width: 220px;
+      transition: all 0.2s;
+    }
+
+    .search-box input:focus {
+      border-color: var(--brand-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+      width: 260px;
+    }
+
+    .members-strip {
+      display: flex;
+      align-items: center;
+      background: rgba(22, 32, 60, 0.8);
+      padding: 4px 10px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      gap: 8px;
+    }
+
+    .member-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #fff;
+      border: 2px solid #16203c;
+      position: relative;
+    }
+
+    .avatar-jm { background: #0284c7; }
+    .avatar-jv { background: #7c3aed; }
+
+    .btn-action {
+      background: var(--brand-blue);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 7px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-action:hover {
+      background: var(--brand-blue-hover);
+    }
+
+    .btn-action svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    /* --- INFO SUBBAR --- */
+    .sub-bar {
+      padding: 10px 24px;
+      background: rgba(16, 26, 54, 0.7);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .sub-bar-left {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .sub-stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sub-stat strong {
+      color: #fff;
+    }
+
+    .badge-status {
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    /* --- KANBAN BOARD CONTAINER --- */
+    .kanban-container {
+      flex: 1;
+      padding: 24px;
+      overflow-x: auto;
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    /* --- KANBAN COLUMNS --- */
+    .kanban-column {
+      background: var(--bg-column);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      width: 340px;
+      min-width: 340px;
+      max-height: calc(100vh - 160px);
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-md);
+      transition: border-color 0.2s;
+    }
+
+    .kanban-column.drag-over {
+      border-color: var(--brand-blue);
+      background: #19264a;
+    }
+
+    .column-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      font-size: 0.88rem;
+    }
+
+    .col-title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .col-indicator {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+    .ind-backlog { background: #94a3b8; }
+    .ind-todo { background: #3b82f6; box-shadow: 0 0 8px rgba(59, 130, 246, 0.6); }
+    .ind-progress { background: #f59e0b; box-shadow: 0 0 8px rgba(245, 158, 11, 0.6); }
+    .ind-review { background: #a855f7; }
+    .ind-done { background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); }
+
+    .card-counter {
+      background: rgba(255, 255, 255, 0.08);
+      font-size: 0.72rem;
+      padding: 2px 7px;
+      border-radius: 10px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .column-cards {
+      padding: 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+    }
+
+    /* --- CARDS --- */
+    .kanban-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      cursor: grab;
+      user-select: none;
+      transition: all 0.2s ease;
+      position: relative;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .kanban-card:hover {
+      background: var(--bg-card-hover);
+      border-color: #3b528b;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .kanban-card.dragging {
+      opacity: 0.4;
+      cursor: grabbing;
+    }
+
+    .card-labels {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .card-tag {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .tag-green { background: var(--tag-green-bg); color: var(--tag-green-text); border: 1px solid var(--tag-green-border); }
+    .tag-blue { background: var(--tag-blue-bg); color: var(--tag-blue-text); border: 1px solid var(--tag-blue-border); }
+    .tag-amber { background: var(--tag-amber-bg); color: var(--tag-amber-text); border: 1px solid var(--tag-amber-border); }
+    .tag-purple { background: var(--tag-purple-bg); color: var(--tag-purple-text); border: 1px solid var(--tag-purple-border); }
+    .tag-rose { background: var(--tag-rose-bg); color: var(--tag-rose-text); border: 1px solid var(--tag-rose-border); }
+
+    .card-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #ffffff;
+      line-height: 1.35;
+      margin-bottom: 6px;
+    }
+
+    .card-description-preview {
+      font-size: 0.77rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-meta-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+
+    .card-badges {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge-icon-text {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-icon-text svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    .badge-checklist-complete {
+      color: var(--tag-green-text);
+      font-weight: 600;
+    }
+
+    .badge-checklist-pending {
+      color: var(--tag-amber-text);
+    }
+
+    .sp-badge {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .card-members {
+      display: flex;
+    }
+
+    .card-members .member-avatar {
+      width: 22px;
+      height: 22px;
+      font-size: 0.6rem;
+      margin-left: -5px;
+    }
+
+    /* Card de Destaque da Próxima Entrega */
+    .card-highlight-target {
+      border: 1px solid rgba(59, 130, 246, 0.5) !important;
+      background: linear-gradient(180deg, #1f2e5a 0%, #172445 100%) !important;
+    }
+
+    .card-highlight-target::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      border-top-left-radius: var(--radius-md);
+      border-top-right-radius: var(--radius-md);
+    }
+
+    /* --- MODAL DE DETALHES DO CARD (ESTILO TRELLO PRO) --- */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 8, 20, 0.85);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-window {
+      background: #151f38;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 840px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      animation: modalSlide 0.25s ease-out;
+    }
+
+    @keyframes modalSlide {
+      from { transform: translateY(16px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      background: rgba(22, 32, 60, 0.6);
+    }
+
+    .modal-title-group {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .modal-title-group svg {
+      width: 22px;
+      height: 22px;
+      color: var(--brand-blue);
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+
+    .modal-title-group h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.3;
+    }
+
+    .modal-column-context {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .modal-close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .modal-close-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .modal-close-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: 1fr 240px;
+      gap: 24px;
+    }
+
+    /* Conteúdo Principal do Modal */
+    .modal-main-col {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .modal-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .modal-section-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-section-title svg {
+      width: 16px;
+      height: 16px;
+      color: var(--brand-blue);
+    }
+
+    .modal-description-box {
+      background: rgba(11, 19, 41, 0.6);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: #cbd5e1;
+    }
+
+    .modal-description-box p {
+      margin-bottom: 10px;
+    }
+
+    .modal-description-box p:last-child {
+      margin-bottom: 0;
+    }
+
+    .modal-description-box ul {
+      margin-left: 20px;
+      margin-bottom: 10px;
+    }
+
+    .modal-description-box li {
+      margin-bottom: 4px;
+    }
+
+    .code-pill {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #93c5fd;
+      font-size: 0.8rem;
+    }
+
+    /* Checklist */
+    .checklist-progress-bar-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .checklist-progress-track {
+      flex: 1;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .checklist-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #34d399);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .checklist-pct {
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+      width: 42px;
+      text-align: right;
+    }
+
+    .checklist-items {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .checklist-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .checklist-item input[type="checkbox"] {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #475569;
+      border-radius: 4px;
+      margin-top: 2px;
+      cursor: pointer;
+      display: grid;
+      place-content: center;
+      background: transparent;
+      transition: all 0.2s;
+    }
+
+    .checklist-item input[type="checkbox"]:checked {
+      background: var(--brand-blue);
+      border-color: var(--brand-blue);
+    }
+
+    .checklist-item input[type="checkbox"]:checked::before {
+      content: "";
+      width: 9px;
+      height: 5px;
+      border-left: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      transform: rotate(-45deg) translate(1px, -1px);
+    }
+
+    .checklist-item-label {
+      font-size: 0.84rem;
+      color: #e2e8f0;
+      line-height: 1.4;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .checklist-item.done .checklist-item-label {
+      text-decoration: line-through;
+      color: var(--text-dim);
+    }
+
+    /* Coluna Lateral do Modal */
+    .modal-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .sidebar-widget {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-widget-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .sidebar-info-card {
+      background: rgba(11, 19, 41, 0.6);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 0.8rem;
+    }
+
+    .links-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sidebar-link-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: #93c5fd;
+      text-decoration: none;
+      font-size: 0.78rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .sidebar-link-btn:hover {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: var(--brand-blue);
+      color: #fff;
+    }
+
+    .sidebar-link-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* --- TOAST / NOTIFICAÇÃO --- */
+    .toast-notice {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e3a8a;
+      border: 1px solid #3b82f6;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      font-size: 0.84rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 200;
+    }
+
+    .toast-notice.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* --- RESPONSIVIDADE --- */
+    @media (max-width: 900px) {
+      .modal-body {
+        grid-template-columns: 1fr;
+      }
+      .modal-sidebar {
+        order: -1;
+      }
+      .board-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+      .header-actions {
+        flex-wrap: wrap;
+      }
+      .search-box input {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== HEADER DO QUADRO TRELLO ==================== -->
+  <header class="board-header">
+    <div class="brand-section">
+      <div class="brand-icon-box">
+        <!-- Ícone SVG de Edifício Hoteleiro -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+          <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
+          <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
+          <path d="M10 6h4"/>
+          <path d="M10 10h4"/>
+          <path d="M10 14h4"/>
+          <path d="M10 18h4"/>
+        </svg>
+      </div>
+      <div class="brand-info">
+        <h1>Grand Plaza Hotel — Gestão de Sprints e Entregas</h1>
+        <p>Laboratório de Inovação III • Prof. Edilberto Silva • GRUPO-06</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Busca em tempo real -->
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.3-4.3"/>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Filtrar cartões, requisitos..." oninput="handleSearch(this.value)">
+      </div>
+
+      <!-- Membros da Equipe -->
+      <div class="members-strip" title="Integrantes do Grupo">
+        <span style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 600;">Time:</span>
+        <div class="member-avatar avatar-jm" title="João Miguel — Scrum Master & Back-End">JM</div>
+        <div class="member-avatar avatar-jv" title="João Victor — Front-End, QA & DevOps">JV</div>
+      </div>
+
+      <!-- Copiar Guia do Trello -->
+      <button class="btn-action" onclick="copyTrelloSummary()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+          <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+        </svg>
+        Copiar Resumo Trello
+      </button>
+    </div>
+  </header>
+
+  <!-- ==================== SUB-BAR INFORMATIVA ==================== -->
+  <div class="sub-bar">
+    <div class="sub-bar-left">
+      <div class="sub-stat">
+        <span>Sprint Atual:</span>
+        <strong>Semana 05 — Sistema de Hospedagem</strong>
+      </div>
+      <div class="sub-stat">
+        <span>Conformidade Rubrica:</span>
+        <span class="badge-status">100% Homologado (Semanas 01-04)</span>
+      </div>
+      <div class="sub-stat">
+        <span>Produção:</span>
+        <a href="https://grand-hotel-tawny.vercel.app" target="_blank" style="color: #60a5fa; text-decoration: none; font-weight: 500;">grand-hotel-tawny.vercel.app</a>
+      </div>
+    </div>
+    <div>
+      <span style="font-size: 0.74rem; color: var(--text-dim);">Dica: Arraste os cartões entre as colunas ou clique para ver detalhes</span>
+    </div>
+  </div>
+
+  <!-- ==================== CONTAINER KANBAN ==================== -->
+  <main class="kanban-container" id="kanbanContainer">
+    
+    <!-- COLUNA 1: BACKLOG DE PRODUTO -->
+    <div class="kanban-column" data-col="backlog" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'backlog')">
+      <div class="column-header">
+        <div class="col-title-group">
+          <span class="col-indicator ind-backlog"></span>
+          <span>Backlog de Requisitos</span>
+        </div>
+        <span class="card-counter" id="count-backlog">2</span>
+      </div>
+      <div class="column-cards" id="cards-backlog"></div>
+    </div>
+
+    <!-- COLUNA 2: A FAZER (PRÓXIMA ENTREGA) -->
+    <div class="kanban-column" data-col="todo" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'todo')">
+      <div class="column-header">
+        <div class="col-title-group">
+          <span class="col-indicator ind-todo"></span>
+          <span>A Fazer (Próxima Entrega)</span>
+        </div>
+        <span class="card-counter" id="count-todo">1</span>
+      </div>
+      <div class="column-cards" id="cards-todo"></div>
+    </div>
+
+    <!-- COLUNA 3: EM ANDAMENTO -->
+    <div class="kanban-column" data-col="inprogress" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'inprogress')">
+      <div class="column-header">
+        <div class="col-title-group">
+          <span class="col-indicator ind-progress"></span>
+          <span>Em Andamento</span>
+        </div>
+        <span class="card-counter" id="count-inprogress">1</span>
+      </div>
+      <div class="column-cards" id="cards-inprogress"></div>
+    </div>
+
+    <!-- COLUNA 4: HOMOLOGAÇÃO & QA -->
+    <div class="kanban-column" data-col="review" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'review')">
+      <div class="column-header">
+        <div class="col-title-group">
+          <span class="col-indicator ind-review"></span>
+          <span>Homologação & QA</span>
+        </div>
+        <span class="card-counter" id="count-review">1</span>
+      </div>
+      <div class="column-cards" id="cards-review"></div>
+    </div>
+
+    <!-- COLUNA 5: CONCLUÍDO (ENTREGAS PASSADAS) -->
+    <div class="kanban-column" data-col="done" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'done')">
+      <div class="column-header">
+        <div class="col-title-group">
+          <span class="col-indicator ind-done"></span>
+          <span>Concluído / Entregue</span>
+        </div>
+        <span class="card-counter" id="count-done">3</span>
+      </div>
+      <div class="column-cards" id="cards-done"></div>
+    </div>
+
+  </main>
+
+  <!-- ==================== MODAL DE DETALHES ==================== -->
+  <div class="modal-backdrop" id="cardModal" onclick="handleBackdropClick(event)">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2"/>
+            <path d="M3 9h18"/>
+            <path d="M9 21V9"/>
+          </svg>
+          <div>
+            <h2 id="modalCardTitle">Título do Cartão</h2>
+            <div class="modal-column-context">Na coluna: <strong id="modalColName" style="color:#60a5fa;">A Fazer</strong></div>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"/>
+            <path d="m6 6 12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Coluna Principal -->
+        <div class="modal-main-col">
+          
+          <!-- Etiquetas -->
+          <div class="modal-section">
+            <div class="modal-section-title">Etiquetas</div>
+            <div class="card-labels" id="modalLabels"></div>
+          </div>
+
+          <!-- Descrição Completa -->
+          <div class="modal-section">
+            <div class="modal-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="21" x2="3" y1="6" y2="6"/>
+                <line x1="15" x2="3" y1="12" y2="12"/>
+                <line x1="17" x2="3" y1="18" y2="18"/>
+              </svg>
+              Descrição Detalhada da Entrega
+            </div>
+            <div class="modal-description-box" id="modalDescription"></div>
+          </div>
+
+          <!-- Checklist Interativa -->
+          <div class="modal-section">
+            <div class="modal-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m9 11 3 3L22 4"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+              </svg>
+              Critérios de Aceite & Tarefas Técnicas
+            </div>
+            
+            <div class="checklist-progress-bar-container">
+              <div class="checklist-progress-track">
+                <div class="checklist-progress-fill" id="modalChecklistProgress"></div>
+              </div>
+              <span class="checklist-pct" id="modalChecklistPct">0%</span>
+            </div>
+
+            <div class="checklist-items" id="modalChecklistItems"></div>
+          </div>
+
+        </div>
+
+        <!-- Coluna Lateral -->
+        <div class="modal-sidebar">
+          
+          <div class="sidebar-widget">
+            <div class="sidebar-widget-title">Estimativa & Esforço</div>
+            <div class="sidebar-info-card">
+              <span style="font-size:0.75rem; color:var(--text-muted);">Complexidade:</span>
+              <div style="font-weight:700; font-size:1.1rem; color:#fff;" id="modalSP">5 Story Points</div>
+            </div>
+          </div>
+
+          <div class="sidebar-widget">
+            <div class="sidebar-widget-title">Responsáveis</div>
+            <div class="sidebar-info-card" id="modalMembers"></div>
+          </div>
+
+          <div class="sidebar-widget">
+            <div class="sidebar-widget-title">Pacote / Artefato</div>
+            <div class="sidebar-info-card">
+              <span class="code-pill" id="modalPackage">GRUPO-06-SEMANA-04.zip</span>
+            </div>
+          </div>
+
+          <div class="sidebar-widget">
+            <div class="sidebar-widget-title">Links & Arquivos</div>
+            <div class="links-list" id="modalLinks"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-notice" id="toastNotice">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;">
+      <path d="M20 6 9 17l-5-5"/>
+    </svg>
+    <span id="toastMessage">Texto da notificação</span>
+  </div>
+
+  <!-- ==================== JAVASCRIPT MODULAR E DADOS ==================== -->
+  <script>
+    /* ==========================================================================
+       BASE DE CONHECIMENTO DAS ENTREGAS (DATA REPOSITORY)
+       ========================================================================== */
+    const boardData = {
+      columns: {
+        backlog: { name: "Backlog de Requisitos", cards: ["card-rf005", "card-rf006"] },
+        todo: { name: "A Fazer (Próxima Entrega)", cards: ["card-rf004"] },
+        inprogress: { name: "Em Andamento", cards: ["card-rf004-arch"] },
+        review: { name: "Homologação & QA", cards: ["card-qa-rubrica"] },
+        done: { name: "Concluído / Entregue", cards: ["card-rf001", "card-rf002", "card-rf003"] }
+      },
+      cards: {
+        /* --- CONCLUÍDOS (PASSADOS) --- */
+        "card-rf001": {
+          id: "card-rf001",
+          title: "RF-001 — Cadastro de Hóspedes (Semana 01 & 02)",
+          description: `
+            <p><strong>Objetivo de Negócio:</strong> Permitir o registro primário de novos hóspedes com validação rigorosa dos dados cadastrais, prevenindo fraudes e garantindo conformidade com a LGPD e regras da Receita Federal.</p>
+            <p><strong>Entregas de Engenharia Realizadas:</strong></p>
+            <ul>
+              <li>Algoritmo oficial do <span class="code-pill">Módulo 11</span> para validação matemática de dígitos verificadores do CPF.</li>
+              <li>Prevenção nativa a <strong>SQL Injection</strong> via ORM SQLAlchemy parametrizado.</li>
+              <li>Frontend SPA com gestão estrita dos <strong>5 Estados Visuais</strong> (Vazio, Carregando, Sucesso, Erro de Validação e Erro de Servidor).</li>
+              <li>Arquitetura resiliente dual: Persistência conectada ao <strong>Supabase PostgreSQL</strong> na nuvem com fallback transparente para <strong>SQLite local</strong> (<span class="code-pill">hotel_grand_plaza.db</span>).</li>
+              <li>Documento canônico em <span class="code-pill">docs/requisitos/RF-001-cadastro-hospede.md</span>.</li>
+            </ul>
+          `,
+          labels: [
+            { text: "Semana 01 & 02", type: "green" },
+            { text: "Entregue", type: "green" },
+            { text: "RF-001", type: "blue" },
+            { text: "Hóspedes", type: "purple" }
+          ],
+          sp: "5 SP",
+          members: [
+            { initials: "JM", name: "João Miguel", role: "Back-End & DB" },
+            { initials: "JV", name: "João Victor", role: "Front-End & QA" }
+          ],
+          package: "GRUPO-Dimitri-SEMANA-01 e 02.zip",
+          links: [
+            { label: "Documentação RF-001", url: "docs/requisitos/RF-001-cadastro-hospede.md" },
+            { label: "DDL SQL Hospedes", url: "database/ddl/rf-001-hospedes-ddl.sql" },
+            { label: "Módulo src/rf-001", url: "src/rf-001-cadastro-hospede/index.html" },
+            { label: "Swagger Oficial", url: "https://grand-hotel-tawny.vercel.app/docs" }
+          ],
+          checklist: [
+            { text: "Validação matemática de CPF via Módulo 11", done: true },
+            { text: "Interface SPA completa com CSS antisslop corporativo", done: true },
+            { text: "Persistência dual: Supabase na porta 6543 e SQLite de resiliência", done: true },
+            { text: "Implementação e teste dos 5 estados de interface", done: true },
+            { text: "Documento oficial SSD seguindo modelo da rubrica", done: true },
+            { text: "Envio do pacote compactado no Moodle", done: true }
+          ]
+        },
+
+        "card-rf002": {
+          id: "card-rf002",
+          title: "RF-002 — Alteração, Busca e Desativação de Hóspedes (Semana 03)",
+          description: `
+            <p><strong>Objetivo de Negócio:</strong> Permitir a localização preditiva instantânea de hóspedes cadastrados, edição de contatos e endereços com garantia inegociável de integridade cadastral e conformidade com LGPD.</p>
+            <p><strong>Entregas de Engenharia Realizadas:</strong></p>
+            <ul>
+              <li><strong>Busca Preditiva Instantânea:</strong> Consulta em tempo real por CPF ou Nome com debounce de 300ms.</li>
+              <li><strong>Regra de Imutabilidade do CPF:</strong> O campo de CPF é chave natural única, bloqueado para edição tanto no DOM quanto validado estritamente no backend Pydantic.</li>
+              <li><strong>Desativação Lógica (Soft Delete):</strong> O hóspede nunca é apagado fisicamente do banco de dados; a flag booleana <span class="code-pill">ativo</span> é alternada para false, garantindo histórico fiscal e conformidade com a LGPD.</li>
+              <li>Auditoria com timestamp automático em <span class="code-pill">atualizado_em</span>.</li>
+              <li>DDL com índices específicos: <span class="code-pill">idx_hospedes_busca</span>.</li>
+            </ul>
+          `,
+          labels: [
+            { text: "Semana 03", type: "green" },
+            { text: "Entregue", type: "green" },
+            { text: "RF-002", type: "blue" },
+            { text: "Soft Delete", type: "amber" }
+          ],
+          sp: "5 SP",
+          members: [
+            { initials: "JM", name: "João Miguel", role: "Back-End & DB" },
+            { initials: "JV", name: "João Victor", role: "Front-End & QA" }
+          ],
+          package: "GRUPO-Dimitri-SEMANA-03.zip",
+          links: [
+            { label: "Documentação RF-002", url: "docs/requisitos/RF-002-alterar-hospede.md" },
+            { label: "DDL Alter SQL", url: "database/ddl/rf-002-hospedes-alter-ddl.sql" },
+            { label: "Módulo src/rf-002", url: "src/rf-002-alterar-hospede/index.html" }
+          ],
+          checklist: [
+            { text: "Busca preditiva com debounce e exibição de cards/tabela", done: true },
+            { text: "Modal de edição com preenchimento reativo de dados", done: true },
+            { text: "Bloqueio estrito da alteração de CPF (Imutabilidade)", done: true },
+            { text: "Toggle de ativação/desativação lógica (Soft Delete)", done: true },
+            { text: "Atualização do Swagger OpenAPI e especificações", done: true },
+            { text: "Homologação e empacotamento GRUPO-Dimitri-SEMANA-03.zip", done: true }
+          ]
+        },
+
+        "card-rf003": {
+          id: "card-rf003",
+          title: "RF-003 — Gestão de Usuários / Operadores e RBAC (Semana 04)",
+          description: `
+            <p><strong>Objetivo de Negócio:</strong> Controle hierárquico de acesso corporativo baseado em papéis (RBAC - Role-Based Access Control) e cadastro protegido de colaboradores da rede hoteleira.</p>
+            <p><strong>Entregas de Engenharia Realizadas:</strong></p>
+            <ul>
+              <li><strong>Matriz RBAC:</strong> Administrador (gestão total), Gerente Geral (supervisão de equipe e relatórios) e Funcionário/Recepção (acesso restrito aos hóspedes).</li>
+              <li><strong>Segurança OWASP A07 & A03:</strong> Senhas protegidas com algoritmo <strong>Bcrypt</strong> e salt criptográfico seguro. Senhas em texto plano nunca são salvas nem retornadas no payload JSON.</li>
+              <li><strong>Topbar Informativa:</strong> Identificação visual do operador logado, perfil hierárquico e botão de logout seguro.</li>
+              <li>Sementes de teste com 3 níveis (<span class="code-pill">admin@grandplaza.com</span>, <span class="code-pill">gerencia@grandplaza.com</span>, <span class="code-pill">recepcao@grandplaza.com</span>).</li>
+            </ul>
+          `,
+          labels: [
+            { text: "Semana 04", type: "green" },
+            { text: "Entregue", type: "green" },
+            { text: "RF-003", type: "blue" },
+            { text: "RBAC & Auth", type: "purple" }
+          ],
+          sp: "5 SP",
+          members: [
+            { initials: "JM", name: "João Miguel", role: "Back-End & DB" },
+            { initials: "JV", name: "João Victor", role: "Front-End & QA" }
+          ],
+          package: "GRUPO-Dimitri-SEMANA-04.zip",
+          links: [
+            { label: "Documentação RF-003", url: "docs/requisitos/RF-003-cadastro-usuario.md" },
+            { label: "DDL Operadores SQL", url: "database/ddl/rf-003-operadores-ddl.sql" },
+            { label: "Módulo src/rf-003", url: "src/rf-003-cadastro-usuario/index.html" }
+          ],
+          checklist: [
+            { text: "Tabela operadores com hash Bcrypt e status ativo", done: true },
+            { text: "Topbar com crachá informativo de perfil e logout", done: true },
+            { text: "Validação de permissões no backend (Dependência FastAPI RBAC)", done: true },
+            { text: "CRUD de operadores com desativação lógica", done: true },
+            { text: "Documentação de SSD e conformidade com a rubrica 100%", done: true },
+            { text: "Carga de seeds no Supabase PostgreSQL", done: true }
+          ]
+        },
+
+        /* --- PRÓXIMA ENTREGA / TO DO (FOCO IMEDIATO) --- */
+        "card-rf004": {
+          id: "card-rf004",
+          title: "🎯 PRÓXIMA ENTREGA: RF-004 — Sistema de Hospedagem dos Hóspedes",
+          description: `
+            <p><strong>🎯 Requisito Oficial da Próxima Sprint:</strong> Implementação do ciclo completo de hospedagem, alocação de acomodações, check-in e check-out de hóspedes no Grand Plaza Hotel.</p>
+            <p><strong>Escopo Técnico Detalhado:</strong></p>
+            <ul>
+              <li><strong>Modelagem Relacional de Hospedagem:</strong> Criação das entidades <span class="code-pill">acomodacoes</span> (quartos, categorias Standard/Luxo/Presidencial, tarifa base, capacidade) e <span class="code-pill">hospedagens</span> (vínculo entre hóspede e acomodação com datas de entrada e saída).</li>
+              <li><strong>Fluxo de Check-in Ágil:</strong> Vinculação de hóspede existente a um quarto disponível com registro de data/hora de entrada e seleção de acompanhantes.</li>
+              <li><strong>Prevenção de Overbooking:</strong> Validação atômica de concorrência garantindo que um mesmo quarto não receba duas hospedagens no mesmo período.</li>
+              <li><strong>Fluxo de Check-out & Faturamento Inicial:</strong> Cálculo automático do número de diárias consumidas e valor total da hospedagem com liberação do quarto para limpeza.</li>
+              <li><strong>Interface de Recepção (Rack de Quartos):</strong> Grid visual interativo com status dos quartos (Disponível, Ocupado, Manutenção, Limpeza).</li>
+            </ul>
+          `,
+          labels: [
+            { text: "Próxima Entrega", type: "rose" },
+            { text: "Sprint 05", type: "blue" },
+            { text: "RF-004", type: "amber" },
+            { text: "Core Hoteleiro", type: "purple" }
+          ],
+          sp: "8 SP",
+          members: [
+            { initials: "JM", name: "João Miguel", role: "Back-End & DB" },
+            { initials: "JV", name: "João Victor", role: "Front-End & QA" }
+          ],
+          package: "GRUPO-Dimitri-SEMANA-05.zip (A Criar)",
+          links: [
+            { label: "Especificação Técnica RF-004", url: "#" },
+            { label: "DDL Hospedagens (Planejamento)", url: "#" },
+            { label: "Protótipo Rack de Quartos", url: "#" }
+          ],
+          checklist: [
+            { text: "DDL: Tabela acomodacoes com número, categoria, capacidade e status", done: false },
+            { text: "DDL: Tabela hospedagens com chaves estrangeiras (id_hospede, id_acomodacao, id_operador)", done: false },
+            { text: "Backend: Endpoint POST /api/v1/hospedagens/checkin com validação de disponibilidade", done: false },
+            { text: "Backend: Endpoint POST /api/v1/hospedagens/{id}/checkout com cálculo de diárias", done: false },
+            { text: "Backend: Endpoint GET /api/v1/acomodacoes/disponiveis", done: false },
+            { text: "Frontend: Grid visual de quartos (Rack Hoteleiro) com estados e filtros", done: false },
+            { text: "Frontend: Modal de Check-in com seleção de hóspede e data prevista de saída", done: false },
+            { text: "Documentação: Documento oficial docs/requisitos/RF-004-hospedagem.md", done: false },
+            { text: "Testes e Empacotamento para a rubrica da Semana 05", done: false }
+          ]
+        },
+
+        /* --- EM ANDAMENTO --- */
+        "card-rf004-arch": {
+          id: "card-rf004-arch",
+          title: "Modelagem DDL & Diagrama de Dados de Hospedagens",
+          description: `
+            <p>Elaboração das constraints de integridade referencial entre a tabela existente <span class="code-pill">hospedes</span>, <span class="code-pill">operadores</span> e as novas tabelas <span class="code-pill">acomodacoes</span> e <span class="code-pill">hospedagens</span>.</p>
+            <p>Definição das regras de status do quarto: <span class="code-pill">DISPONIVEL</span>, <span class="code-pill">OCUPADO</span>, <span class="code-pill">LIMPEZA</span>, <span class="code-pill">MANUTENCAO</span>.</p>
+          `,
+          labels: [
+            { text: "Em Andamento", type: "amber" },
+            { text: "Database", type: "blue" }
+          ],
+          sp: "3 SP",
+          members: [
+            { initials: "JM", name: "João Miguel", role: "Back-End & DB" }
+          ],
+          package: "database/ddl/rf-004-hospedagens-ddl.sql",
+          links: [
+            { label: "Ver DB.md", url: "regras/DB.md" }
+          ],
+          checklist: [
+            { text: "Mapeamento das chaves estrangeiras", done: true },
+            { text: "Validação de tipos de dados PostgreSQL e SQLite", done: true },
+            { text: "Índice composto para busca por período de datas", done: false }
+          ]
+        },
+
+        /* --- HOMOLOGAÇÃO & QA --- */
+        "card-qa-rubrica": {
+          id: "card-qa-rubrica",
+          title: "Auditoria de Segurança OWASP & Checklist da Rubrica",
+          description: `
+            <p>Inspeção periódica dos entregáveis contra as 7 regras de pontuação do Prof. Edilberto Silva:</p>
+            <ul>
+              <li>Requisito com identificação e Story Points (2%)</li>
+              <li>Atores e benefícios de negócio (10%)</li>
+              <li>Casos de uso com fluxos e RNFs (20%)</li>
+              <li>Protótipo funcional com 5 estados e persistência ativa (40%)</li>
+              <li>Arquitetura e ADRs (15%)</li>
+              <li>OWASP Top 10 (10%)</li>
+              <li>Documentação OpenAPI Swagger (3%)</li>
+            </ul>
+          `,
+          labels: [
+            { text: "Auditoria", type: "purple" },
+            { text: "Qualidade", type: "blue" }
+          ],
+          sp: "2 SP",
+          members: [
+            { initials: "JV", name: "João Victor", role: "Front-End & QA" }
+          ],
+          package: "docs/requisitos/",
+          links: [
+            { label: "Rubrica da Disciplina", url: "regras/requisitos/requisitos/Ativida.md" }
+          ],
+          checklist: [
+            { text: "Validação do Swagger OpenAPI 3.1", done: true },
+            { text: "Teste de resiliência sem variável de ambiente (SQLite fallback)", done: true },
+            { text: "Verificação dos 5 estados de interface na SPA", done: true }
+          ]
+        },
+
+        /* --- BACKLOG FUTURO --- */
+        "card-rf005": {
+          id: "card-rf005",
+          title: "RF-005 — Controle de Consumo, Frigobar e Serviços de Quarto",
+          description: `
+            <p>Lançamento de itens de consumo (produtos do frigobar, lavanderia, refeições do restaurante) vinculados à conta da hospedagem ativa do hóspede.</p>
+          `,
+          labels: [
+            { text: "Backlog", type: "blue" },
+            { text: "RF-005", type: "purple" }
+          ],
+          sp: "5 SP",
+          members: [],
+          package: "Futuro",
+          links: [],
+          checklist: [
+            { text: "Tabela de itens e serviços do hotel", done: false },
+            { text: "Lançamento em tempo real com operador autenticado", done: false }
+          ]
+        },
+
+        "card-rf006": {
+          id: "card-rf006",
+          title: "RF-006 — Dashboard Executivo & Relatórios de Ocupação",
+          description: `
+            <p>Métricas de taxa de ocupação diária, faturamento acumulado, tempo médio de permanência e previsão de receitas para a Gerência Geral.</p>
+          `,
+          labels: [
+            { text: "Backlog", type: "blue" },
+            { text: "Relatórios", type: "amber" }
+          ],
+          sp: "5 SP",
+          members: [],
+          package: "Futuro",
+          links: [],
+          checklist: [
+            { text: "Gráficos de ocupação percentual", done: false },
+            { text: "Exportação em PDF/CSV para auditoria contábil", done: false }
+          ]
+        }
+      }
+    };
+
+    /* ==========================================================================
+       RENDERIZADOR DO QUADRO KANBAN
+       ========================================================================== */
+    function renderBoard(filterQuery = "") {
+      const q = filterQuery.toLowerCase().trim();
+
+      Object.keys(boardData.columns).forEach(colKey => {
+        const col = boardData.columns[colKey];
+        const container = document.getElementById(`cards-${colKey}`);
+        container.innerHTML = "";
+
+        let visibleCount = 0;
+
+        col.cards.forEach(cardId => {
+          const card = boardData.cards[cardId];
+          if (!card) return;
+
+          // Filtro por texto, título ou etiquetas
+          const matchesQuery = !q || 
+            card.title.toLowerCase().includes(q) ||
+            card.description.toLowerCase().includes(q) ||
+            card.labels.some(l => l.text.toLowerCase().includes(q));
+
+          if (!matchesQuery) return;
+          visibleCount++;
+
+          const cardEl = document.createElement("div");
+          cardEl.className = `kanban-card ${cardId === 'card-rf004' ? 'card-highlight-target' : ''}`;
+          cardEl.draggable = true;
+          cardEl.id = `dom-${cardId}`;
+          cardEl.setAttribute("data-card-id", cardId);
+
+          // Labels
+          const labelsHtml = card.labels.map(l => 
+            `<span class="card-tag tag-${l.type}">${l.text}</span>`
+          ).join("");
+
+          // Checklist stats
+          const totalItems = card.checklist ? card.checklist.length : 0;
+          const doneItems = card.checklist ? card.checklist.filter(i => i.done).length : 0;
+          const isAllDone = totalItems > 0 && doneItems === totalItems;
+
+          const checklistBadge = totalItems > 0 ? `
+            <span class="badge-icon-text ${isAllDone ? 'badge-checklist-complete' : 'badge-checklist-pending'}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m9 11 3 3L22 4"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+              </svg>
+              ${doneItems}/${totalItems}
+            </span>
+          ` : "";
+
+          // Membros Avatares
+          const membersHtml = card.members.map(m => `
+            <div class="member-avatar ${m.initials === 'JM' ? 'avatar-jm' : 'avatar-jv'}" title="${m.name} (${m.role})">
+              ${m.initials}
+            </div>
+          `).join("");
+
+          cardEl.innerHTML = `
+            <div class="card-labels">${labelsHtml}</div>
+            <div class="card-title">${card.title}</div>
+            <div class="card-description-preview">${card.description.replace(/<[^>]*>/g, ' ')}</div>
+            <div class="card-meta-bar">
+              <div class="card-badges">
+                ${checklistBadge}
+                <span class="sp-badge">${card.sp}</span>
+              </div>
+              <div class="card-members">
+                ${membersHtml}
+              </div>
+            </div>
+          `;
+
+          // Eventos de Drag & Click
+          cardEl.addEventListener("dragstart", (e) => handleDragStart(e, cardId, colKey));
+          cardEl.addEventListener("dragend", handleDragEnd);
+          cardEl.addEventListener("click", () => openCardModal(cardId, colKey));
+
+          container.appendChild(cardEl);
+        });
+
+        // Atualizar contador da coluna
+        const counterEl = document.getElementById(`count-${colKey}`);
+        if (counterEl) counterEl.textContent = visibleCount;
+      });
+    }
+
+    /* ==========================================================================
+       DRAG AND DROP HANDLERS (HTML5 NATIVO)
+       ========================================================================== */
+    let draggedCardId = null;
+    let sourceColKey = null;
+
+    function handleDragStart(e, cardId, colKey) {
+      draggedCardId = cardId;
+      sourceColKey = colKey;
+      e.target.classList.add("dragging");
+      e.dataTransfer.setData("text/plain", cardId);
+    }
+
+    function handleDragEnd(e) {
+      e.target.classList.remove("dragging");
+      document.querySelectorAll(".kanban-column").forEach(c => c.classList.remove("drag-over"));
+    }
+
+    function allowDrop(e) {
+      e.preventDefault();
+      const colEl = e.currentTarget;
+      colEl.classList.add("drag-over");
+    }
+
+    function handleDrop(e, targetColKey) {
+      e.preventDefault();
+      document.querySelectorAll(".kanban-column").forEach(c => c.classList.remove("drag-over"));
+
+      if (!draggedCardId || sourceColKey === targetColKey) return;
+
+      // Mover card entre colunas no modelo de dados
+      const sourceCol = boardData.columns[sourceColKey];
+      const targetCol = boardData.columns[targetColKey];
+
+      sourceCol.cards = sourceCol.cards.filter(id => id !== draggedCardId);
+      targetCol.cards.push(draggedCardId);
+
+      renderBoard(document.getElementById("searchInput").value);
+      showToast(`Cartão movido para "${targetCol.name}"`);
+    }
+
+    /* ==========================================================================
+       MODAL DE DETALHES DO CARTÃO
+       ========================================================================== */
+    let activeCardId = null;
+
+    function openCardModal(cardId, colKey) {
+      const card = boardData.cards[cardId];
+      if (!card) return;
+
+      activeCardId = cardId;
+      const col = boardData.columns[colKey];
+
+      document.getElementById("modalCardTitle").textContent = card.title;
+      document.getElementById("modalColName").textContent = col ? col.name : "";
+      document.getElementById("modalDescription").innerHTML = card.description;
+      document.getElementById("modalSP").textContent = card.sp;
+      document.getElementById("modalPackage").textContent = card.package;
+
+      // Labels
+      const labelsContainer = document.getElementById("modalLabels");
+      labelsContainer.innerHTML = card.labels.map(l => 
+        `<span class="card-tag tag-${l.type}" style="font-size:0.75rem; padding:4px 10px;">${l.text}</span>`
+      ).join("");
+
+      // Membros
+      const membersContainer = document.getElementById("modalMembers");
+      if (card.members && card.members.length > 0) {
+        membersContainer.innerHTML = card.members.map(m => `
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <div class="member-avatar ${m.initials === 'JM' ? 'avatar-jm' : 'avatar-jv'}" style="width:24px; height:24px; font-size:0.65rem;">
+              ${m.initials}
+            </div>
+            <div>
+              <div style="font-weight:600; color:#fff; font-size:0.78rem;">${m.name}</div>
+              <div style="font-size:0.68rem; color:var(--text-muted);">${m.role}</div>
+            </div>
+          </div>
+        `).join("");
+      } else {
+        membersContainer.innerHTML = `<span style="color:var(--text-dim); font-size:0.75rem;">Aguardando atribuição</span>`;
+      }
+
+      // Links
+      const linksContainer = document.getElementById("modalLinks");
+      if (card.links && card.links.length > 0) {
+        linksContainer.innerHTML = card.links.map(lk => `
+          <a href="${lk.url}" target="_blank" class="sidebar-link-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 3h6v6"/>
+              <path d="M10 14 21 3"/>
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            </svg>
+            ${lk.label}
+          </a>
+        `).join("");
+      } else {
+        linksContainer.innerHTML = `<span style="color:var(--text-dim); font-size:0.75rem;">Sem links externos</span>`;
+      }
+
+      // Render Checklist
+      renderChecklist(card);
+
+      // Abrir modal
+      document.getElementById("cardModal").classList.add("open");
+    }
+
+    function renderChecklist(card) {
+      const itemsContainer = document.getElementById("modalChecklistItems");
+      itemsContainer.innerHTML = "";
+
+      const total = card.checklist ? card.checklist.length : 0;
+      const done = card.checklist ? card.checklist.filter(i => i.done).length : 0;
+      const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+
+      document.getElementById("modalChecklistProgress").style.width = `${pct}%`;
+      document.getElementById("modalChecklistPct").textContent = `${pct}%`;
+
+      if (!card.checklist || card.checklist.length === 0) {
+        itemsContainer.innerHTML = `<span style="color:var(--text-dim); font-size:0.8rem;">Nenhum item na checklist.</span>`;
+        return;
+      }
+
+      card.checklist.forEach((item, index) => {
+        const itemEl = document.createElement("div");
+        itemEl.className = `checklist-item ${item.done ? 'done' : ''}`;
+
+        itemEl.innerHTML = `
+          <input type="checkbox" id="chk-${index}" ${item.done ? 'checked' : ''}>
+          <label class="checklist-item-label" for="chk-${index}">${item.text}</label>
+        `;
+
+        itemEl.querySelector('input').addEventListener("change", (e) => {
+          item.done = e.target.checked;
+          itemEl.classList.toggle("done", item.done);
+          renderChecklist(card);
+          renderBoard(document.getElementById("searchInput").value);
+        });
+
+        itemsContainer.appendChild(itemEl);
+      });
+    }
+
+    function closeModal() {
+      document.getElementById("cardModal").classList.remove("open");
+      activeCardId = null;
+    }
+
+    function handleBackdropClick(e) {
+      if (e.target.id === "cardModal") {
+        closeModal();
+      }
+    }
+
+    /* ==========================================================================
+       BUSCA / FILTRO EM TEMPO REAL
+       ========================================================================== */
+    function handleSearch(query) {
+      renderBoard(query);
+    }
+
+    /* ==========================================================================
+       UTILITÁRIO: COPIAR RESUMO PARA O TRELLO
+       ========================================================================== */
+    function copyTrelloSummary() {
+      const markdown = `
+# QUADRO DO TRELLO — GRAND PLAZA HOTEL MANAGEMENT
+**Equipe:** João Miguel (Scrum Master / Back-End) e João Victor (Front-End / QA)
+**Disciplina:** Laboratório de Inovação III — Prof. Edilberto Silva (2026)
+
+---
+### 1. COLUNA: CONCLUÍDO / ENTREGUE (DONE)
+- [x] **RF-001 — Cadastro de Hóspedes (Semana 01 & 02)** [5 SP]
+  - Validação estrita de CPF via Algoritmo Módulo 11 da Receita Federal
+  - Prevenção ativa a SQL Injection (SQLAlchemy) e sanitização anti-XSS
+  - Frontend SPA com gestão rigorosa dos 5 Estados Visuais
+  - Resiliência dual transparente: Supabase PostgreSQL (Porta 6543) e SQLite local
+  - Pacote: GRUPO-Dimitri-SEMANA-01 e 02.zip | Deploy: https://grand-hotel-tawny.vercel.app
+
+- [x] **RF-002 — Alteração, Busca e Desativação de Hóspedes (Semana 03)** [5 SP]
+  - Busca preditiva instantânea com debounce de 300ms por CPF/Nome
+  - Modal de edição rápida de contatos e endereços
+  - Imutabilidade inegociável da chave natural de CPF
+  - Soft Delete (desativação lógica via flag booleana ativo) em conformidade com LGPD
+  - Pacote: GRUPO-Dimitri-SEMANA-03.zip
+
+- [x] **RF-003 — Gestão de Usuários / Operadores e RBAC (Semana 04)** [5 SP]
+  - Matriz de perfis RBAC: Administrador, Gerente Geral e Recepção
+  - Criptografia de credenciais com hash Bcrypt e salt seguro (OWASP A07)
+  - Topbar informativa com indicação de perfil em tempo real e logout seguro
+  - Pacote: GRUPO-Dimitri-SEMANA-04.zip
+
+---
+### 2. COLUNA: A FAZER (PRÓXIMA ENTREGA / SPRINT 05)
+- [ ] **🎯 RF-004 — Sistema de Hospedagem dos Hóspedes** [8 SP]
+  - Modelagem Relacional: tabelas 'acomodacoes' (quartos/categorias) e 'hospedagens'
+  - Fluxo de Check-in: alocação de hóspede a quarto disponível e acompanhantes
+  - Prevenção atômica de Overbooking em reservas simultâneas
+  - Fluxo de Check-out: cálculo automático do número de diárias e valor total
+  - Interface SPA: Rack visual de quartos com status (Livre, Ocupado, Limpeza, Manutenção)
+  - Documentação Oficial SSD: docs/requisitos/RF-004-hospedagem.md
+  - Pacote Alvo: GRUPO-Dimitri-SEMANA-05.zip
+      `.trim();
+
+      navigator.clipboard.writeText(markdown).then(() => {
+        showToast("Estrutura do Trello copiada para a área de transferência!");
+      }).catch(() => {
+        showToast("Erro ao copiar. Selecione o texto manualmente.");
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toastNotice");
+      document.getElementById("toastMessage").textContent = msg;
+      toast.classList.add("show");
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3500);
+    }
+
+    // Tecla ESC fecha modal
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeModal();
+    });
+
+    // Inicialização ao carregar a página
+    document.addEventListener("DOMContentLoaded", () => {
+      renderBoard();
+    });
+  </script>
+</body>
+</html>

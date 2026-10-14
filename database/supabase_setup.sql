@@ -157,3 +157,79 @@ ON CONFLICT (cpf) DO NOTHING;
 
 -- Ajustar a sequência de ID dos hóspedes
 SELECT setval('tb_hospedes_id_seq', (SELECT COALESCE(MAX(id), 1) FROM tb_hospedes));
+
+
+-- ============================================================================
+-- 3. REQUISITO RF-004: ACOMODAÇÕES, HOSPEDAGEM, CHECK-IN E CHECK-OUT
+-- ============================================================================
+
+-- TABELA: tb_acomodacoes (Inventário de Quartos)
+CREATE TABLE IF NOT EXISTS tb_acomodacoes (
+    id BIGSERIAL PRIMARY KEY,
+    uuid_publico VARCHAR(36) NOT NULL UNIQUE,
+    numero VARCHAR(10) NOT NULL UNIQUE,
+    categoria VARCHAR(30) NOT NULL, -- 'STANDARD', 'LUXO', 'PRESIDENCIAL'
+    capacidade INTEGER NOT NULL DEFAULT 2,
+    tarifa_base NUMERIC(10, 2) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'DISPONIVEL', -- 'DISPONIVEL', 'OCUPADO', 'MANUTENCAO', 'LIMPEZA'
+    andar INTEGER NOT NULL DEFAULT 1,
+    descricao VARCHAR(255),
+    is_ativo INTEGER NOT NULL DEFAULT 1,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_acomodacoes_status ON tb_acomodacoes(status);
+CREATE INDEX IF NOT EXISTS idx_acomodacoes_categoria ON tb_acomodacoes(categoria);
+CREATE INDEX IF NOT EXISTS idx_acomodacoes_uuid ON tb_acomodacoes(uuid_publico);
+CREATE INDEX IF NOT EXISTS idx_acomodacoes_numero ON tb_acomodacoes(numero);
+CREATE INDEX IF NOT EXISTS idx_acomodacoes_status_cat ON tb_acomodacoes(status, categoria);
+
+
+-- TABELA: tb_hospedagens (Registro de Estadia e Faturamento)
+CREATE TABLE IF NOT EXISTS tb_hospedagens (
+    id BIGSERIAL PRIMARY KEY,
+    uuid_publico VARCHAR(36) NOT NULL UNIQUE,
+    id_hospede BIGINT NOT NULL,
+    id_acomodacao BIGINT NOT NULL,
+    id_operador BIGINT,
+    data_checkin TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    data_prevista_checkout TIMESTAMPTZ NOT NULL,
+    data_checkout TIMESTAMPTZ,
+    status VARCHAR(20) NOT NULL DEFAULT 'ATIVA', -- 'ATIVA', 'FINALIZADA', 'CANCELADA'
+    num_diarias INTEGER,
+    tarifa_diaria_aplicada NUMERIC(10, 2) NOT NULL,
+    valor_total NUMERIC(10, 2),
+    acompanhantes_json TEXT,
+    observacoes TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_hospedagens_hospede FOREIGN KEY (id_hospede) REFERENCES tb_hospedes(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_hospedagens_acomodacao FOREIGN KEY (id_acomodacao) REFERENCES tb_acomodacoes(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_hospedagens_operador FOREIGN KEY (id_operador) REFERENCES tb_operadores(id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_hospedagens_uuid ON tb_hospedagens(uuid_publico);
+CREATE INDEX IF NOT EXISTS idx_hospedagens_status ON tb_hospedagens(status);
+CREATE INDEX IF NOT EXISTS idx_hospedagens_hospede ON tb_hospedagens(id_hospede);
+CREATE INDEX IF NOT EXISTS idx_hospedagens_acomodacao ON tb_hospedagens(id_acomodacao);
+CREATE INDEX IF NOT EXISTS idx_hospedagens_ativa_acomodacao ON tb_hospedagens(id_acomodacao, status);
+
+
+-- Seeds de Acomodações do Grand Plaza Hotel
+INSERT INTO tb_acomodacoes (id, uuid_publico, numero, categoria, capacidade, tarifa_base, status, andar, descricao, is_ativo)
+VALUES 
+(1, 'c1010000-0000-0000-0000-000000000101', '101', 'STANDARD', 2, 280.00, 'DISPONIVEL', 1, 'Quarto Standard com 1 cama de casal Queen, Wi-Fi 6 e mesa de trabalho', 1),
+(2, 'c1020000-0000-0000-0000-000000000102', '102', 'STANDARD', 2, 280.00, 'DISPONIVEL', 1, 'Quarto Standard com 2 camas de solteiro e vista interna tranquila', 1),
+(3, 'c1030000-0000-0000-0000-000000000103', '103', 'STANDARD', 3, 340.00, 'LIMPEZA', 1, 'Quarto Standard Triplo com 1 cama de casal e 1 de solteiro', 1),
+(4, 'c1040000-0000-0000-0000-000000000104', '104', 'STANDARD', 1, 240.00, 'DISPONIVEL', 1, 'Quarto Individual Compacto ideal para viajantes corporativos', 1),
+(5, 'c2010000-0000-0000-0000-000000000201', '201', 'LUXO', 2, 490.00, 'DISPONIVEL', 2, 'Suíte Luxo com cama King Size, varanda panorâmica e hidromassagem', 1),
+(6, 'c2020000-0000-0000-0000-000000000202', '202', 'LUXO', 2, 490.00, 'DISPONIVEL', 2, 'Suíte Luxo com isolamento acústico reforçado e cafeteira Nespresso', 1),
+(7, 'c2030000-0000-0000-0000-000000000203', '203', 'LUXO', 4, 620.00, 'MANUTENCAO', 2, 'Suíte Luxo Familiar com ante-sala e 2 banheiros completos', 1),
+(8, 'c2040000-0000-0000-0000-000000000204', '204', 'LUXO', 2, 490.00, 'DISPONIVEL', 2, 'Suíte Luxo Master com Smart TV 65 polegadas e adega climatizada', 1),
+(9, 'c3010000-0000-0000-0000-000000000301', '301', 'PRESIDENCIAL', 4, 1450.00, 'DISPONIVEL', 3, 'Suíte Presidencial Imperial com living privativo, closet e mordomo 24h', 1),
+(10, 'c3020000-0000-0000-0000-000000000302', '302', 'PRESIDENCIAL', 6, 2100.00, 'DISPONIVEL', 3, 'Cobertura Penthouse com terraço gourmet privativo e vista da orla', 1)
+ON CONFLICT (id) DO NOTHING;
+
+SELECT setval('tb_acomodacoes_id_seq', (SELECT COALESCE(MAX(id), 1) FROM tb_acomodacoes));
+

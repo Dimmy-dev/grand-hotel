@@ -11,11 +11,14 @@ import os
 
 # Resolução de diretórios absolutos (Carrega o requisito mais recente disponível)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SRC_DIR_RF4 = os.path.join(BASE_DIR, "src", "rf-004-hospedagem")
 SRC_DIR_RF3 = os.path.join(BASE_DIR, "src", "rf-003-cadastro-usuario")
 SRC_DIR_RF2 = os.path.join(BASE_DIR, "src", "rf-002-alterar-hospede")
 SRC_DIR_RF1 = os.path.join(BASE_DIR, "src", "rf-001-cadastro-hospede")
 
-if os.path.exists(SRC_DIR_RF3):
+if os.path.exists(SRC_DIR_RF4):
+    SRC_DIR = SRC_DIR_RF4
+elif os.path.exists(SRC_DIR_RF3):
     SRC_DIR = SRC_DIR_RF3
 elif os.path.exists(SRC_DIR_RF2):
     SRC_DIR = SRC_DIR_RF2
