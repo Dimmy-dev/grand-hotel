@@ -346,6 +346,11 @@
       const hospede = hospedes.find(h => h.uuid_publico === uuid_hospede);
       if (!hospede) throw new Error('Hóspede não localizado.');
 
+      const totalHospedes = 1 + (acompanhantes ? acompanhantes.length : 0);
+      if (totalHospedes > (quarto.capacidade || 1)) {
+        throw new Error(`Acomodação ${quarto.numero} suporta no máximo ${quarto.capacidade} hóspede(s) (foram informados ${totalHospedes}).`);
+      }
+
       const uuidHospedagem = 'hosp-' + Date.now();
       const agora = new Date().toISOString();
 
@@ -516,10 +521,7 @@
     checkinQuartoUuid: document.getElementById('checkin-quarto-uuid'),
     checkinQuartoTarifa: document.getElementById('checkin-quarto-tarifa'),
     checkinModalCapacidadeBadge: document.getElementById('checkin-modal-capacidade-badge'),
-    checkinHospedeSelect: document.getElementById('checkin-hospede-select'),
-    checkinSegundoHospedeSelect: document.getElementById('checkin-segundo-hospede-select'),
-    groupSegundoHospede: document.getElementById('group-segundo-hospede'),
-    groupOutrosAcompanhantes: document.getElementById('group-outros-acompanhantes'),
+    checkinHospedesContainer: document.getElementById('checkin-hospedes-dinamicos-container'),
     checkinDataSaida: document.getElementById('checkin-data-saida'),
     checkinAcompanhantes: document.getElementById('checkin-acompanhantes'),
     checkinObservacoes: document.getElementById('checkin-observacoes'),
@@ -1025,18 +1027,22 @@
       if (quarto.status === 'OCUPADO' && quarto.hospedagem_ativa) {
         const hospNome = quarto.hospedagem_ativa.hospede_nome;
         const acomp = quarto.hospedagem_ativa.acompanhantes || [];
+        const totalOcupantes = 1 + acomp.length;
         let acompanhantesTexto = '';
         if (acomp && acomp.length > 0) {
           acompanhantesTexto = `
-            <div style="color: #1e3a8a; font-size: 0.77rem; margin-top: 3px; border-top: 1px dashed #bfdbfe; padding-top: 3px;">
-              👥 <strong>2º Hóspede / Acomp.:</strong> ${acomp.join(', ')}
+            <div style="color: #1e3a8a; font-size: 0.77rem; margin-top: 4px; border-top: 1px dashed #bfdbfe; padding-top: 4px;">
+              👥 <strong>Acompanhante(s):</strong> ${acomp.join(', ')}
             </div>
           `;
         }
         hospedeInfoHtml = `
           <div style="margin-top: 10px; padding: 10px 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); font-size: 0.8rem;">
-            <div style="font-weight: 600; color: #1e40af; margin-bottom: 2px;">
-              👤 <strong>Titular:</strong> ${hospNome}
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
+              <span style="font-weight: 600; color: #1e40af;">👤 <strong>Titular:</strong> ${hospNome}</span>
+              <span style="font-size: 0.7rem; background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; font-weight: 700;">
+                ${totalOcupantes} de ${quarto.capacidade} vaga(s)
+              </span>
             </div>
             ${acompanhantesTexto}
             <div style="color: #475569; font-size: 0.74rem; margin-top: 4px;">
@@ -1081,18 +1087,17 @@
   }
 
   // Check-in Modal Logic
-  window.abrirModalCheckin = async function (uuidQuarto, numeroQuarto, tarifa, capacidade = 2) {
+  window.abrirModalCheckin = async function (uuidQuarto, numeroQuarto, tarifa, capacidade = 1) {
+    state.checkinCapacidadeAtual = parseInt(capacidade) || 1;
     dom.checkinQuartoUuid.value = uuidQuarto;
     dom.checkinQuartoNum.textContent = numeroQuarto;
     dom.checkinQuartoTarifa.value = tarifa;
     dom.checkinTarifaPreview.textContent = formatarMoeda(tarifa);
+    dom.checkinAcompanhantes.value = '';
+    dom.checkinObservacoes.value = '';
 
     if (dom.checkinModalCapacidadeBadge) {
-      dom.checkinModalCapacidadeBadge.textContent = `Até ${capacidade} hóspede(s)`;
-    }
-
-    if (dom.groupSegundoHospede) {
-      dom.groupSegundoHospede.style.display = capacidade >= 2 ? 'block' : 'none';
+      dom.checkinModalCapacidadeBadge.textContent = `Até ${state.checkinCapacidadeAtual} hóspede(s) (${state.checkinCapacidadeAtual} vaga(s))`;
     }
 
     const amanha = new Date();
@@ -1102,34 +1107,55 @@
     const localISOTime = new Date(amanha.getTime() - tzOffset).toISOString().slice(0, 16);
     dom.checkinDataSaida.value = localISOTime;
 
-    dom.checkinHospedeSelect.innerHTML = '<option value="">Carregando catálogo de hóspedes...</option>';
-    if (dom.checkinSegundoHospedeSelect) {
-      dom.checkinSegundoHospedeSelect.innerHTML = '<option value="">Nenhum 2º hóspede (ocupação individual)</option>';
-    }
+    dom.checkinHospedesContainer.innerHTML = `
+      <div style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+        Carregando catálogo de hóspedes...
+      </div>
+    `;
     dom.modalCheckin.classList.add('active');
 
     try {
       const hospedes = await apiFetch('/api/v1/hospedes?is_ativo=1');
-      dom.checkinHospedeSelect.innerHTML = '<option value="">Selecione o 1º hóspede (titular)...</option>';
-      if (dom.checkinSegundoHospedeSelect) {
-        dom.checkinSegundoHospedeSelect.innerHTML = '<option value="">Nenhum 2º hóspede (ocupação individual)</option>';
+      let html = '';
+
+      for (let i = 1; i <= state.checkinCapacidadeAtual; i++) {
+        const isTitular = (i === 1);
+        const labelTexto = isTitular
+          ? '1º Hóspede (Titular da Reserva) *'
+          : `${i}º Hóspede (Acompanhante ${i - 1} no Quarto)`;
+        const placeholderOption = isTitular
+          ? 'Selecione o titular da reserva...'
+          : 'Vaga Livre (Ocupação individual / parcial)';
+
+        html += `
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" for="checkin-slot-hospede-${i}">
+              ${labelTexto}
+            </label>
+            <select class="form-control checkin-slot-select" id="checkin-slot-hospede-${i}" data-slot="${i}" ${isTitular ? 'required' : ''}>
+              <option value="">${placeholderOption}</option>
+        `;
+
+        hospedes.forEach(h => {
+          const uuid = h.uuid || h.uuid_publico;
+          const cpfFmt = formatarCpf(h.cpf);
+          html += `<option value="${uuid}" data-nome="${h.nome}">${h.nome} (CPF: ${cpfFmt})</option>`;
+        });
+
+        html += `
+            </select>
+            ${!isTitular ? '<small style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; display: block;">Permite alocar até a capacidade contratual de ' + state.checkinCapacidadeAtual + ' hóspedes.</small>' : ''}
+          </div>
+        `;
       }
 
-      hospedes.forEach(h => {
-        const opt1 = document.createElement('option');
-        opt1.value = h.uuid || h.uuid_publico;
-        opt1.textContent = `${h.nome} (CPF: ${formatarCpf(h.cpf)})`;
-        dom.checkinHospedeSelect.appendChild(opt1);
-
-        if (dom.checkinSegundoHospedeSelect && capacidade >= 2) {
-          const opt2 = document.createElement('option');
-          opt2.value = h.uuid || h.uuid_publico;
-          opt2.textContent = `${h.nome} (CPF: ${formatarCpf(h.cpf)})`;
-          dom.checkinSegundoHospedeSelect.appendChild(opt2);
-        }
-      });
+      dom.checkinHospedesContainer.innerHTML = html;
     } catch {
-      dom.checkinHospedeSelect.innerHTML = '<option value="">Erro ao carregar hóspedes</option>';
+      dom.checkinHospedesContainer.innerHTML = `
+        <div style="padding: 16px; text-align: center; color: #ef4444; font-size: 0.85rem;">
+          Falha ao carregar catálogo de hóspedes para check-in.
+        </div>
+      `;
     }
   };
 
@@ -1139,45 +1165,52 @@
 
   async function confirmarCheckin() {
     const uuid_acomodacao = dom.checkinQuartoUuid.value;
-    const uuid_hospede = dom.checkinHospedeSelect.value;
     const data_prevista_checkout = dom.checkinDataSaida.value;
     const acompanhantesStr = dom.checkinAcompanhantes.value.trim();
     const observacoes = dom.checkinObservacoes.value.trim();
 
-    if (!uuid_hospede) {
-      exibirToast('Selecione o 1º hóspede (titular) para o check-in.', 'error');
-      return;
-    }
     if (!data_prevista_checkout) {
       exibirToast('Informe a data prevista de check-out.', 'error');
       return;
     }
 
-    // Coleta do 2º hóspede e acompanhantes adicionais
+    const capacidade = state.checkinCapacidadeAtual || 1;
+    const titularSelect = document.getElementById('checkin-slot-hospede-1');
+    const uuid_hospede = titularSelect ? titularSelect.value : '';
+
+    if (!uuid_hospede) {
+      exibirToast('Selecione o 1º hóspede (titular da reserva) para efetuar o check-in.', 'error');
+      return;
+    }
+
+    // Coleta dos hóspedes alocados nas vagas e validação de deduplicação
+    const hospedesSelecionadosUuids = [uuid_hospede];
     const acompanhantes = [];
-    if (dom.checkinSegundoHospedeSelect && dom.checkinSegundoHospedeSelect.value) {
-      if (dom.checkinSegundoHospedeSelect.value === uuid_hospede) {
-        exibirToast('O 2º hóspede não pode ser a mesma pessoa do titular.', 'error');
-        return;
-      }
-      const opt = dom.checkinSegundoHospedeSelect.options[dom.checkinSegundoHospedeSelect.selectedIndex];
-      if (opt && opt.text) {
-        acompanhantes.push(opt.text);
+
+    for (let i = 2; i <= capacidade; i++) {
+      const slotSelect = document.getElementById(`checkin-slot-hospede-${i}`);
+      if (slotSelect && slotSelect.value) {
+        const valUuid = slotSelect.value;
+        if (hospedesSelecionadosUuids.includes(valUuid)) {
+          exibirToast(`O mesmo hóspede não pode ocupar mais de uma vaga (conflito no ${i}º Hóspede).`, 'error');
+          return;
+        }
+        hospedesSelecionadosUuids.push(valUuid);
+        const opt = slotSelect.options[slotSelect.selectedIndex];
+        const nomeTexto = opt.getAttribute('data-nome') || opt.text;
+        acompanhantes.push(nomeTexto);
       }
     }
 
+    // Acompanhantes de texto livre (se houver)
     if (acompanhantesStr) {
       const extras = acompanhantesStr.split(',').map(s => s.trim()).filter(Boolean);
       acompanhantes.push(...extras);
     }
 
-    // Validação estrita de lotação máxima do quarto
-    const quarto = state.acomodacoes.find(q => q.uuid_publico === uuid_acomodacao);
-    const maxCapacidade = quarto ? quarto.capacidade : 2;
     const totalPessoas = 1 + acompanhantes.length;
-
-    if (totalPessoas > maxCapacidade) {
-      exibirToast(`A capacidade deste quarto é de até ${maxCapacidade} hóspede(s). Você informou ${totalPessoas}.`, 'error');
+    if (totalPessoas > capacidade) {
+      exibirToast(`A capacidade deste quarto é de até ${capacidade} hóspede(s). Você informou ${totalPessoas} ocupante(s).`, 'error');
       return;
     }
 
@@ -1193,9 +1226,9 @@
         })
       });
 
-      const msgHospedes = acompanhantes.length > 0 
-        ? `Check-in de 2 pessoas concluído com sucesso!` 
-        : `Check-in concluído com sucesso!`;
+      const msgHospedes = totalPessoas > 1
+        ? `Check-in de ${totalPessoas} hóspedes concluído com sucesso!`
+        : `Check-in individual concluído com sucesso!`;
 
       exibirToast(`${msgHospedes} Quarto agora está OCUPADO.`);
       fecharModalCheckin();

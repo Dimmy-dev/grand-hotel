@@ -509,6 +509,14 @@ def realizar_checkin(
                 detail=f"O Quarto {quarto.numero} não está disponível para check-in (Status atual: {quarto.status})."
             )
 
+        # Validação estrita de capacidade máxima da acomodação
+        total_hospedes = 1 + len(dados.acompanhantes or [])
+        if total_hospedes > quarto.capacidade:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"O Quarto {quarto.numero} possui capacidade para até {quarto.capacidade} hóspedes (foram enviados {total_hospedes})."
+            )
+
         # 3. Criação da Hospedagem com Snapshot da Tarifa
         hospedagem = HospedagemModel(
             id_hospede=hospede.id,

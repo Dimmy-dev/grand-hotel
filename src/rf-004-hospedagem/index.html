@@ -1434,20 +1434,16 @@
           <span class="status-badge badge-disponivel" id="checkin-modal-capacidade-badge">Até 2 hóspedes</span>
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="checkin-hospede-select">1º Hóspede (Titular da Reserva) *</label>
-          <select class="form-control" id="checkin-hospede-select" required>
-            <option value="">Carregando hóspedes cadastrados...</option>
-          </select>
+        <!-- CONTAINER DINÂMICO DE SELETORES DE HÓSPEDES BASEADO NA CAPACIDADE -->
+        <div id="checkin-hospedes-dinamicos-container">
+          <!-- Gerado dinamicamente via JavaScript conforme a capacidade exata do quarto -->
         </div>
 
-        <div class="form-group" id="group-segundo-hospede">
-          <label class="form-label" for="checkin-segundo-hospede-select">2º Hóspede (Acompanhante no Quarto)</label>
-          <select class="form-control" id="checkin-segundo-hospede-select">
-            <option value="">Selecione o 2º hóspede cadastrado (ou deixe em branco se individual)...</option>
-          </select>
-          <small style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; display: block;">
-            Permite registrar os 2 hóspedes para os quartos duplos conforme a capacidade.
+        <div class="form-group" id="group-outros-acompanhantes">
+          <label class="form-label" for="checkin-acompanhantes">Acompanhantes Adicionais / Dependentes (Opcional)</label>
+          <input type="text" class="form-control" id="checkin-acompanhantes" placeholder="Ex: Bebê de colo ou visitante registrado">
+          <small style="font-size: 0.74rem; color: var(--text-muted); margin-top: 4px; display: block;">
+            Caso queira registrar o nome de dependentes ou visitantes temporários além dos hóspedes alocados acima.
           </small>
         </div>
 
