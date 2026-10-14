@@ -1,9 +1,12 @@
 """
-ESQUEMAS PYDANTIC V2 (VALIDAÇÃO E CONTRATOS REST)
-Sistema Grand Plaza Hotel Management — RF-004 (Sistema de Hospedagem, Check-in, Check-out e Rack Hoteleiro)
+ESQUEMAS PYDANTIC V2 UNIFICADOS (VALIDAÇÃO E CONTRATOS REST)
+Sistema Grand Plaza Hotel Management — Portal Integrado (RF-001, RF-002, RF-003 e RF-004)
 Diretrizes: regras/back.md e OWASP Top 10
 """
 
+import re
+import html
+from enum import Enum
 from datetime import datetime, date
 from typing import Optional, List, Generic, TypeVar, Any
 from decimal import Decimal
@@ -22,35 +25,149 @@ class EnvelopeResponse(BaseModel, Generic[T]):
     data: Optional[T] = None
     error: Optional[ErrorDetail] = None
 
-# 2. ESQUEMAS DE AUTENTICAÇÃO E OPERADORES
+# 2. ENUM DE CARGOS DO SISTEMA
+class CargoEnum(str, Enum):
+    ADMIN = "ADMIN"
+    GERENTE = "GERENTE"
+    FUNCIONARIO = "FUNCIONARIO"
+
+# 3. AUTENTICAÇÃO E OPERADORES (RF-003)
 class LoginSchema(BaseModel):
     email: EmailStr = Field(..., example="recepcao@grandplaza.com")
     senha: str = Field(..., min_length=6, max_length=128)
 
+class OperadorCreateSchema(BaseModel):
+    nome: str = Field(..., min_length=3, max_length=120)
+    email: EmailStr
+    senha: str = Field(..., min_length=6, max_length=100)
+    confirmacao_senha: str = Field(..., min_length=6, max_length=100)
+    cargo: CargoEnum = Field(default=CargoEnum.FUNCIONARIO)
+
+    @field_validator("nome")
+    @classmethod
+    def sanitizar_nome(cls, v: str) -> str:
+        texto = html.escape(v.strip())
+        if len(texto) < 3:
+            raise ValueError("O nome do operador deve conter no mínimo 3 caracteres.")
+        return texto
+
+    @model_validator(mode="after")
+    def validar_senhas(self):
+        if self.senha != self.confirmacao_senha:
+            raise ValueError("A senha e a confirmação de senha não coincidem.")
+        return self
+
+class OperadorUpdateSchema(BaseModel):
+    nome: str = Field(..., min_length=3, max_length=120)
+    email: EmailStr
+    cargo: CargoEnum
+    senha: Optional[str] = Field(None, min_length=6, max_length=100)
+    confirmacao_senha: Optional[str] = Field(None, min_length=6, max_length=100)
+
+    @field_validator("nome")
+    @classmethod
+    def sanitizar_nome(cls, v: str) -> str:
+        return html.escape(v.strip())
+
+    @model_validator(mode="after")
+    def validar_novas_senhas(self):
+        if self.senha or self.confirmacao_senha:
+            if self.senha != self.confirmacao_senha:
+                raise ValueError("A nova senha e a confirmação não coincidem.")
+        return self
+
+class OperadorStatusSchema(BaseModel):
+    is_ativo: int = Field(..., ge=0, le=1)
+
 class OperadorResponseSchema(BaseModel):
-    uuid_publico: str
+    uuid: str = Field(..., alias="uuid_publico")
     nome: str
     email: EmailStr
     cargo: str
     is_ativo: int
-    created_at: datetime
+    is_online: bool = False
+    created_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
+        populate_by_name = True
 
-# 3. ESQUEMAS DE HÓSPEDE (Para visualização e seleção no Check-in)
-class HospedeSimpleSchema(BaseModel):
-    uuid_publico: str
+# 4. HÓSPEDES (RF-001 & RF-002)
+def validar_cpf_modulo11(cpf_str: str) -> bool:
+    """Validação matemática estrita de CPF pelo algoritmo Módulo 11 da Receita Federal."""
+    cpf_limpo = re.sub(r"\D", "", cpf_str)
+    if len(cpf_limpo) != 11 or len(set(cpf_limpo)) == 1:
+        return False
+    soma1 = sum(int(cpf_limpo[i]) * (10 - i) for i in range(9))
+    resto1 = (soma1 * 10) % 11
+    digito1 = 0 if resto1 == 10 else resto1
+    if int(cpf_limpo[9]) != digito1:
+        return False
+    soma2 = sum(int(cpf_limpo[i]) * (11 - i) for i in range(10))
+    resto2 = (soma2 * 10) % 11
+    digito2 = 0 if resto2 == 10 else resto2
+    return int(cpf_limpo[10]) == digito2
+
+class HospedeCreateSchema(BaseModel):
+    nome: str = Field(..., min_length=3, max_length=150)
+    email: EmailStr
+    cpf: str
+    telefone: str = Field(..., min_length=10, max_length=20)
+    data_nascimento: date
+    observacoes: Optional[str] = Field(None, max_length=1000)
+
+    @field_validator("nome", "observacoes")
+    @classmethod
+    def sanitizar_texto(cls, v: Optional[str]) -> Optional[str]:
+        return html.escape(v.strip()) if v else v
+
+    @field_validator("cpf")
+    @classmethod
+    def validar_cpf(cls, v: str) -> str:
+        cpf_num = re.sub(r"\D", "", v)
+        if not validar_cpf_modulo11(cpf_num):
+            raise ValueError("CPF inválido segundo o algoritmo módulo 11.")
+        return cpf_num
+
+    @field_validator("data_nascimento")
+    @classmethod
+    def validar_data_nasc(cls, v: date) -> date:
+        if v > date.today():
+            raise ValueError("A data de nascimento não pode ser futura.")
+        return v
+
+class HospedeUpdateSchema(BaseModel):
+    nome: str = Field(..., min_length=3, max_length=150)
+    email: EmailStr
+    telefone: str = Field(..., min_length=10, max_length=20)
+    observacoes: Optional[str] = Field(None, max_length=1000)
+
+    @field_validator("nome", "observacoes")
+    @classmethod
+    def sanitizar_texto(cls, v: Optional[str]) -> Optional[str]:
+        return html.escape(v.strip()) if v else v
+
+class HospedeStatusSchema(BaseModel):
+    is_ativo: int = Field(..., ge=0, le=1)
+
+class HospedeResponseSchema(BaseModel):
+    uuid: str = Field(..., alias="uuid_publico")
     nome: str
     cpf: str
     email: str
     telefone: str
-    is_ativo: int
+    data_nascimento: Optional[date] = None
+    observacoes: Optional[str] = None
+    is_ativo: int = 1
+    created_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
+        populate_by_name = True
 
-# 4. ESQUEMAS DE ACOMODAÇÃO (RACK HOTELEIRO)
+HospedeSimpleSchema = HospedeResponseSchema
+
+# 5. ACOMODAÇÕES E RACK (RF-004)
 class AcomodacaoResponseSchema(BaseModel):
     uuid_publico: str
     numero: str
@@ -77,7 +194,7 @@ class AcomodacaoStatusUpdateSchema(BaseModel):
             raise ValueError(f"Status inválido. Escolha entre: {', '.join(sorted(permitidos))}")
         return status_limpo
 
-# 5. ESQUEMAS DE HOSPEDAGEM (CHECK-IN E CHECK-OUT)
+# 6. HOSPEDAGENS (CHECK-IN E CHECK-OUT)
 class CheckinRequestSchema(BaseModel):
     uuid_hospede: str = Field(..., description="UUID público do hóspede cadastrado")
     uuid_acomodacao: str = Field(..., description="UUID público do quarto a ser ocupado")
@@ -120,18 +237,14 @@ class CheckoutResponseSchema(BaseModel):
 
 class HospedagemDetalheSchema(BaseModel):
     uuid_publico: str
-    hospede: HospedeSimpleSchema
-    acomodacao: AcomodacaoResponseSchema
-    operador_nome: Optional[str] = None
+    quarto_numero: str
+    quarto_categoria: str
+    hospede_nome: str
+    hospede_cpf: str
     data_checkin: datetime
     data_prevista_checkout: datetime
-    data_checkout: Optional[datetime] = None
-    status: str
-    num_diarias: Optional[int] = None
     tarifa_diaria_aplicada: Decimal
-    valor_total: Optional[Decimal] = None
-    acompanhantes: List[str] = []
-    observacoes: Optional[str] = None
+    status: str
 
     class Config:
         from_attributes = True

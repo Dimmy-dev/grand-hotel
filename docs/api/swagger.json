@@ -397,9 +397,9 @@
         "tags": [
           "Hóspedes"
         ],
-        "summary": "Listar Hospedes Para Selecao",
-        "description": "Lista hóspedes ativos para o modal de seleção do Check-in.",
-        "operationId": "listar_hospedes_para_selecao_api_v1_hospedes_get",
+        "summary": "Listar Hospedes",
+        "description": "Retorna a listagem de hóspedes do hotel com suporte a busca preditiva e filtro de status.",
+        "operationId": "listar_hospedes_api_v1_hospedes_get",
         "parameters": [
           {
             "name": "termo",
@@ -418,6 +418,24 @@
               "title": "Termo"
             },
             "description": "Buscar por nome ou CPF"
+          },
+          {
+            "name": "is_ativo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filtrar por 1 (ativos) ou 0 (inativos)",
+              "title": "Is Ativo"
+            },
+            "description": "Filtrar por 1 (ativos) ou 0 (inativos)"
           }
         ],
         "responses": {
@@ -426,7 +444,309 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EnvelopeResponse_List_HospedeSimpleSchema__"
+                  "$ref": "#/components/schemas/EnvelopeResponse_List_HospedeResponseSchema__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Hóspedes"
+        ],
+        "summary": "Cadastrar Hospede",
+        "description": "Cadastra um novo hóspede (RF-001) com validação de CPF Módulo 11 e e-mail único.",
+        "operationId": "cadastrar_hospede_api_v1_hospedes_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HospedeCreateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeResponse_HospedeResponseSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hospedes/{uuid_publico}": {
+      "get": {
+        "tags": [
+          "Hóspedes"
+        ],
+        "summary": "Obter Detalhes Hospede",
+        "description": "Retorna a ficha cadastral completa de um hóspede específico.",
+        "operationId": "obter_detalhes_hospede_api_v1_hospedes__uuid_publico__get",
+        "parameters": [
+          {
+            "name": "uuid_publico",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Uuid Publico"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeResponse_HospedeResponseSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Hóspedes"
+        ],
+        "summary": "Atualizar Hospede",
+        "description": "Atualiza os dados cadastrais do hóspede (RF-002) com auditoria de modificações.",
+        "operationId": "atualizar_hospede_api_v1_hospedes__uuid_publico__put",
+        "parameters": [
+          {
+            "name": "uuid_publico",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Uuid Publico"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HospedeUpdateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeResponse_HospedeResponseSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hospedes/{uuid_publico}/status": {
+      "patch": {
+        "tags": [
+          "Hóspedes"
+        ],
+        "summary": "Alternar Status Hospede",
+        "description": "Alterna o status do hóspede entre ativo e inativo (Soft Delete).",
+        "operationId": "alternar_status_hospede_api_v1_hospedes__uuid_publico__status_patch",
+        "parameters": [
+          {
+            "name": "uuid_publico",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Uuid Publico"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HospedeStatusSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeResponse_HospedeResponseSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/operadores": {
+      "get": {
+        "tags": [
+          "Operadores"
+        ],
+        "summary": "Listar Operadores",
+        "description": "Lista todos os operadores cadastrados no sistema com indicação de status online.",
+        "operationId": "listar_operadores_api_v1_operadores_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeResponse_List_OperadorResponseSchema__"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Operadores"
+        ],
+        "summary": "Cadastrar Operador",
+        "description": "Cadastra um novo operador/usuário com senha Bcrypt de 12 rounds (RF-003).",
+        "operationId": "cadastrar_operador_api_v1_operadores_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OperadorCreateSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeResponse_OperadorResponseSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/operadores/{uuid_publico}/status": {
+      "patch": {
+        "tags": [
+          "Operadores"
+        ],
+        "summary": "Alternar Status Operador",
+        "description": "Ativa ou desativa um operador (Soft Delete), impedindo auto-desativação do último ADMIN.",
+        "operationId": "alternar_status_operador_api_v1_operadores__uuid_publico__status_patch",
+        "parameters": [
+          {
+            "name": "uuid_publico",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Uuid Publico"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OperadorStatusSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeResponse_OperadorResponseSchema_"
                 }
               }
             }
@@ -589,6 +909,15 @@
           "status"
         ],
         "title": "AcomodacaoStatusUpdateSchema"
+      },
+      "CargoEnum": {
+        "type": "string",
+        "enum": [
+          "ADMIN",
+          "GERENTE",
+          "FUNCIONARIO"
+        ],
+        "title": "CargoEnum"
       },
       "CheckinRequestSchema": {
         "properties": {
@@ -783,6 +1112,39 @@
         ],
         "title": "EnvelopeResponse[CheckoutResponseSchema]"
       },
+      "EnvelopeResponse_HospedeResponseSchema_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HospedeResponseSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "EnvelopeResponse[HospedeResponseSchema]"
+      },
       "EnvelopeResponse_List_AcomodacaoResponseSchema__": {
         "properties": {
           "success": {
@@ -820,7 +1182,7 @@
         ],
         "title": "EnvelopeResponse[List[AcomodacaoResponseSchema]]"
       },
-      "EnvelopeResponse_List_HospedeSimpleSchema__": {
+      "EnvelopeResponse_List_HospedeResponseSchema__": {
         "properties": {
           "success": {
             "type": "boolean",
@@ -830,7 +1192,7 @@
             "anyOf": [
               {
                 "items": {
-                  "$ref": "#/components/schemas/HospedeSimpleSchema"
+                  "$ref": "#/components/schemas/HospedeResponseSchema"
                 },
                 "type": "array"
               },
@@ -855,7 +1217,44 @@
         "required": [
           "success"
         ],
-        "title": "EnvelopeResponse[List[HospedeSimpleSchema]]"
+        "title": "EnvelopeResponse[List[HospedeResponseSchema]]"
+      },
+      "EnvelopeResponse_List_OperadorResponseSchema__": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/OperadorResponseSchema"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "EnvelopeResponse[List[OperadorResponseSchema]]"
       },
       "EnvelopeResponse_List_dict__": {
         "properties": {
@@ -1005,7 +1404,58 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
-      "HospedeSimpleSchema": {
+      "HospedeCreateSchema": {
+        "properties": {
+          "nome": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 3,
+            "title": "Nome"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "cpf": {
+            "type": "string",
+            "title": "Cpf"
+          },
+          "telefone": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 10,
+            "title": "Telefone"
+          },
+          "data_nascimento": {
+            "type": "string",
+            "format": "date",
+            "title": "Data Nascimento"
+          },
+          "observacoes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observacoes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nome",
+          "email",
+          "cpf",
+          "telefone",
+          "data_nascimento"
+        ],
+        "title": "HospedeCreateSchema"
+      },
+      "HospedeResponseSchema": {
         "properties": {
           "uuid_publico": {
             "type": "string",
@@ -1027,9 +1477,45 @@
             "type": "string",
             "title": "Telefone"
           },
+          "data_nascimento": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Nascimento"
+          },
+          "observacoes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observacoes"
+          },
           "is_ativo": {
             "type": "integer",
-            "title": "Is Ativo"
+            "title": "Is Ativo",
+            "default": 1
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
           }
         },
         "type": "object",
@@ -1038,10 +1524,64 @@
           "nome",
           "cpf",
           "email",
-          "telefone",
+          "telefone"
+        ],
+        "title": "HospedeResponseSchema"
+      },
+      "HospedeStatusSchema": {
+        "properties": {
+          "is_ativo": {
+            "type": "integer",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Is Ativo"
+          }
+        },
+        "type": "object",
+        "required": [
           "is_ativo"
         ],
-        "title": "HospedeSimpleSchema"
+        "title": "HospedeStatusSchema"
+      },
+      "HospedeUpdateSchema": {
+        "properties": {
+          "nome": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 3,
+            "title": "Nome"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "telefone": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 10,
+            "title": "Telefone"
+          },
+          "observacoes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observacoes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nome",
+          "email",
+          "telefone"
+        ],
+        "title": "HospedeUpdateSchema"
       },
       "LoginSchema": {
         "properties": {
@@ -1064,6 +1604,45 @@
           "senha"
         ],
         "title": "LoginSchema"
+      },
+      "OperadorCreateSchema": {
+        "properties": {
+          "nome": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 3,
+            "title": "Nome"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "senha": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 6,
+            "title": "Senha"
+          },
+          "confirmacao_senha": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 6,
+            "title": "Confirmacao Senha"
+          },
+          "cargo": {
+            "$ref": "#/components/schemas/CargoEnum",
+            "default": "FUNCIONARIO"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nome",
+          "email",
+          "senha",
+          "confirmacao_senha"
+        ],
+        "title": "OperadorCreateSchema"
       },
       "OperadorResponseSchema": {
         "properties": {
@@ -1088,9 +1667,21 @@
             "type": "integer",
             "title": "Is Ativo"
           },
+          "is_online": {
+            "type": "boolean",
+            "title": "Is Online",
+            "default": false
+          },
           "created_at": {
-            "type": "string",
-            "format": "date-time",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Created At"
           }
         },
@@ -1100,10 +1691,24 @@
           "nome",
           "email",
           "cargo",
-          "is_ativo",
-          "created_at"
+          "is_ativo"
         ],
         "title": "OperadorResponseSchema"
+      },
+      "OperadorStatusSchema": {
+        "properties": {
+          "is_ativo": {
+            "type": "integer",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Is Ativo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_ativo"
+        ],
+        "title": "OperadorStatusSchema"
       },
       "ValidationError": {
         "properties": {

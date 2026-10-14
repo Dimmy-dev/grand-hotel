@@ -751,6 +751,212 @@
       from { transform: translateX(100%); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
+
+    /* ==========================================================================
+       ABAS DE NAVEGAÇÃO CORPORATIVA (PORTAL UNIFICADO RF-001/002/003/004)
+       ========================================================================== */
+    .nav-tabs-wrapper {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 70px;
+      z-index: 90;
+    }
+
+    .nav-tabs {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .nav-tab {
+      padding: 14px 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border: none;
+      background: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 3px solid transparent;
+      transition: all var(--transition-fast);
+      position: relative;
+    }
+
+    .nav-tab:hover {
+      color: var(--brand-navy);
+      background: rgba(30, 58, 138, 0.03);
+    }
+
+    .nav-tab.active {
+      color: var(--brand-navy);
+      border-bottom-color: var(--brand-navy);
+      background: rgba(30, 58, 138, 0.05);
+    }
+
+    .tab-badge {
+      background: var(--bg-subtle);
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      font-weight: 700;
+    }
+
+    .nav-tab.active .tab-badge {
+      background: var(--brand-navy);
+      color: #ffffff;
+    }
+
+    /* SEÇÕES DAS ABAS */
+    .tab-content {
+      display: none;
+      animation: tabFadeIn 200ms ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes tabFadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* TABELAS CORPORATIVAS DE DADOS (HÓSPEDES & USUÁRIOS) */
+    .data-table-card {
+      background: var(--bg-surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      margin-top: 20px;
+    }
+
+    .data-table-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+
+    .data-table th {
+      background: #f8fafc;
+      padding: 14px 20px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .data-table td {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      vertical-align: middle;
+    }
+
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .data-table tr:hover td {
+      background: #f8fafc;
+    }
+
+    .btn-action-icon {
+      background: none;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: var(--transition-fast);
+    }
+
+    .btn-action-icon:hover {
+      background: var(--bg-subtle);
+      color: var(--text-main);
+      border-color: var(--border-hover);
+    }
+
+    .btn-action-icon.danger:hover {
+      background: #fee2e2;
+      color: #991b1b;
+      border-color: #fca5a5;
+    }
+
+    .search-input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      min-width: 280px;
+    }
+
+    .search-input-wrap svg {
+      position: absolute;
+      left: 12px;
+      color: var(--text-placeholder);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 38px;
+      padding-left: 36px;
+      padding-right: 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      font-size: 0.85rem;
+      background: var(--bg-surface);
+      color: var(--text-main);
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--brand-navy);
+      box-shadow: 0 0 0 3px var(--brand-focus-ring);
+    }
+
+    .badge-cargo-admin {
+      background: #fdf4ff;
+      border: 1px solid #f0abfc;
+      color: #86198f;
+    }
+
+    .badge-cargo-gerente {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+    }
+
+    .badge-cargo-funcionario {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #475569;
+    }
   </style>
 </head>
 <body>
@@ -793,8 +999,40 @@
     </div>
   </header>
 
+  <!-- BARRA DE NAVEGAÇÃO DE ABAS CORPORATIVA (PORTAL UNIFICADO RF-001/002/003/004) -->
+  <nav class="nav-tabs-wrapper">
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-tab="view-rack" id="tab-btn-rack">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-3M9 9h1M9 13h1M9 17h1"/>
+        </svg>
+        Rack Hoteleiro (RF-004)
+        <span class="tab-badge" id="badge-total-quartos">12</span>
+      </button>
+
+      <button class="nav-tab" data-tab="view-hospedes" id="tab-btn-hospedes">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Gestão de Hóspedes (RF-001/002)
+        <span class="tab-badge" id="badge-total-hospedes">-</span>
+      </button>
+
+      <button class="nav-tab" data-tab="view-operadores" id="tab-btn-operadores">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        Usuários do Sistema (RF-003)
+        <span class="tab-badge" id="badge-total-operadores">-</span>
+      </button>
+    </div>
+  </nav>
+
   <!-- CONTEÚDO PRINCIPAL -->
   <main class="container">
+    <div id="view-rack" class="tab-content active">
 
     <!-- CARDS DE MÉTRICAS OPERACIONAIS -->
     <section class="stats-grid">
@@ -875,8 +1113,304 @@
     <section class="rooms-grid" id="rooms-grid">
       <!-- Inserido dinamicamente via app.js -->
     </section>
+  </div>
+
+  <!-- ====================================================================
+       ABA 2: GESTÃO DE HÓSPEDES (RF-001 & RF-002)
+       ==================================================================== -->
+  <div id="view-hospedes" class="tab-content">
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">
+          Total de Hóspedes
+          <span class="stat-indicator" style="background-color: var(--brand-navy);"></span>
+        </div>
+        <div class="stat-value" id="stat-total-hospedes">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          Hóspedes Ativos
+          <span class="stat-indicator" style="background-color: #22c55e;"></span>
+        </div>
+        <div class="stat-value" id="stat-hospedes-ativos">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          Hóspedes Inativos
+          <span class="stat-indicator" style="background-color: #94a3b8;"></span>
+        </div>
+        <div class="stat-value" id="stat-hospedes-inativos">-</div>
+      </div>
+    </section>
+
+    <section class="controls-bar" style="margin-top: 20px;">
+      <div style="display: flex; gap: 12px; align-items: center; flex: 1; flex-wrap: wrap;">
+        <div class="search-input-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" class="search-input" id="search-hospedes" placeholder="Buscar por Nome ou CPF...">
+        </div>
+
+        <select class="select-category" id="filter-hospedes-status">
+          <option value="">Todos os Status</option>
+          <option value="1" selected>Apenas Ativos</option>
+          <option value="0">Apenas Inativos</option>
+        </select>
+      </div>
+
+      <button class="btn-primary" id="btn-abrir-criar-hospede">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Novo Hóspede
+      </button>
+    </section>
+
+    <div class="data-table-card">
+      <div class="data-table-header">
+        <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">
+          Cadastro de Hóspedes do Grand Plaza Hotel (RF-001 & RF-002)
+        </div>
+        <span style="font-size: 0.8rem; color: var(--text-muted);" id="table-hospedes-count">0 hóspedes</span>
+      </div>
+      <div style="overflow-x: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nome Completo</th>
+              <th>CPF</th>
+              <th>E-mail</th>
+              <th>Telefone</th>
+              <th>Status</th>
+              <th style="text-align: right;">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-hospedes">
+            <!-- Inserido dinamicamente via app.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       ABA 3: USUÁRIOS DO SISTEMA & EQUIPE (RF-003)
+       ==================================================================== -->
+  <div id="view-operadores" class="tab-content">
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">
+          Total de Operadores
+          <span class="stat-indicator" style="background-color: var(--brand-navy);"></span>
+        </div>
+        <div class="stat-value" id="stat-total-operadores">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          Operadores Ativos
+          <span class="stat-indicator" style="background-color: #22c55e;"></span>
+        </div>
+        <div class="stat-value" id="stat-operadores-ativos">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          Operadores Online
+          <span class="stat-indicator" style="background-color: #3b82f6;"></span>
+        </div>
+        <div class="stat-value" id="stat-operadores-online">-</div>
+      </div>
+    </section>
+
+    <section class="controls-bar" style="margin-top: 20px;">
+      <div style="font-size: 0.88rem; color: var(--text-muted);">
+        Gestão de operadores, recepcionistas e administradores com controle de acesso baseado em função (RBAC).
+      </div>
+
+      <button class="btn-primary" id="btn-abrir-criar-operador">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Novo Usuário
+      </button>
+    </section>
+
+    <div class="data-table-card">
+      <div class="data-table-header">
+        <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">
+          Equipe Operacional e Perfis de Acesso (RF-003)
+        </div>
+        <span style="font-size: 0.8rem; color: var(--text-muted);" id="table-operadores-count">0 usuários</span>
+      </div>
+      <div style="overflow-x: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>E-mail Corporativo</th>
+              <th>Cargo / Função</th>
+              <th>Conexão</th>
+              <th>Status</th>
+              <th style="text-align: right;">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-operadores">
+            <!-- Inserido dinamicamente via app.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
   </main>
+
+  <!-- MODAL DE CADASTRO DE HÓSPEDE (RF-001) -->
+  <div class="modal-overlay" id="modal-criar-hospede">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">Novo Hóspede — Cadastro RF-001</div>
+        <button class="modal-close" id="btn-close-criar-hospede-modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <form id="form-criar-hospede">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="hospede-criar-nome">Nome Completo *</label>
+            <input type="text" class="form-control" id="hospede-criar-nome" required minlength="3" placeholder="Ex: Roberto Carlos da Costa">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label class="form-label" for="hospede-criar-cpf">CPF (Somente números) *</label>
+              <input type="text" class="form-control" id="hospede-criar-cpf" required placeholder="Ex: 52998224725" maxlength="14">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="hospede-criar-data-nasc">Data de Nascimento *</label>
+              <input type="date" class="form-control" id="hospede-criar-data-nasc" required>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label class="form-label" for="hospede-criar-email">E-mail *</label>
+              <input type="email" class="form-control" id="hospede-criar-email" required placeholder="cliente@email.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="hospede-criar-telefone">Telefone / WhatsApp *</label>
+              <input type="text" class="form-control" id="hospede-criar-telefone" required placeholder="(61) 98765-4321">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="hospede-criar-obs">Observações / Preferências</label>
+            <input type="text" class="form-control" id="hospede-criar-obs" placeholder="Ex: Alérgico a penas, prefere andar alto">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="btn-cancelar-criar-hospede">Cancelar</button>
+          <button type="submit" class="btn-primary" id="btn-salvar-criar-hospede">Cadastrar Hóspede</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL DE EDIÇÃO DE HÓSPEDE (RF-002) -->
+  <div class="modal-overlay" id="modal-editar-hospede">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">Alterar Dados do Hóspede — RF-002</div>
+        <button class="modal-close" id="btn-close-editar-hospede-modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <form id="form-editar-hospede">
+        <div class="modal-body">
+          <input type="hidden" id="hospede-editar-uuid">
+          <div class="form-group">
+            <label class="form-label" for="hospede-editar-nome">Nome Completo *</label>
+            <input type="text" class="form-control" id="hospede-editar-nome" required minlength="3">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label class="form-label" for="hospede-editar-cpf">CPF (Inalterável)</label>
+              <input type="text" class="form-control" id="hospede-editar-cpf" disabled style="background-color: var(--bg-subtle);">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="hospede-editar-telefone">Telefone *</label>
+              <input type="text" class="form-control" id="hospede-editar-telefone" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="hospede-editar-email">E-mail *</label>
+            <input type="email" class="form-control" id="hospede-editar-email" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="hospede-editar-obs">Observações / Preferências</label>
+            <input type="text" class="form-control" id="hospede-editar-obs">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="btn-cancelar-editar-hospede">Cancelar</button>
+          <button type="submit" class="btn-primary" id="btn-salvar-editar-hospede">Salvar Alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL DE CADASTRO DE OPERADOR (RF-003) -->
+  <div class="modal-overlay" id="modal-criar-operador">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">Novo Usuário / Operador — RF-003</div>
+        <button class="modal-close" id="btn-close-criar-operador-modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <form id="form-criar-operador">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="operador-criar-nome">Nome do Operador *</label>
+            <input type="text" class="form-control" id="operador-criar-nome" required minlength="3" placeholder="Ex: Lucas Mendes">
+          </div>
+          <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label class="form-label" for="operador-criar-email">E-mail Corporativo *</label>
+              <input type="email" class="form-control" id="operador-criar-email" required placeholder="usuario@grandplaza.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="operador-criar-cargo">Cargo / Função *</label>
+              <select class="form-control" id="operador-criar-cargo" required>
+                <option value="FUNCIONARIO">Funcionário / Recepção</option>
+                <option value="GERENTE">Gerente</option>
+                <option value="ADMIN">Administrador</option>
+              </select>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label class="form-label" for="operador-criar-senha">Senha de Acesso *</label>
+              <input type="password" class="form-control" id="operador-criar-senha" required minlength="6" placeholder="Mínimo 6 caracteres">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="operador-criar-conf-senha">Confirmar Senha *</label>
+              <input type="password" class="form-control" id="operador-criar-conf-senha" required minlength="6" placeholder="Repita a senha">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="btn-cancelar-criar-operador">Cancelar</button>
+          <button type="submit" class="btn-primary" id="btn-salvar-criar-operador">Cadastrar Usuário</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- MODAL DE CHECK-IN ÁGIL -->
   <div class="modal-overlay" id="modal-checkin">

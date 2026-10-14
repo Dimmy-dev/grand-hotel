@@ -23,6 +23,7 @@ import math
 import secrets
 import hashlib
 import sys
+import re
 from datetime import datetime, timedelta
 from pathlib import Path
 from decimal import Decimal
@@ -43,7 +44,14 @@ from database import get_db, engine, Base, DB_DIAGNOSTICS
 from models import OperadorModel, SessaoModel, HospedeModel, AuditLogModel, AcomodacaoModel, HospedagemModel
 from schemas import (
     LoginSchema,
+    OperadorCreateSchema,
+    OperadorUpdateSchema,
+    OperadorStatusSchema,
     OperadorResponseSchema,
+    HospedeCreateSchema,
+    HospedeUpdateSchema,
+    HospedeStatusSchema,
+    HospedeResponseSchema,
     HospedeSimpleSchema,
     AcomodacaoResponseSchema,
     AcomodacaoStatusUpdateSchema,
@@ -677,20 +685,334 @@ def listar_hospedagens_ativas(db: Session = Depends(get_db)):
 # AUXILIARES PARA O FRONTEND (HÓSPEDES ATIVOS E DIAGNÓSTICO)
 # ---------------------------------------------------------------------------
 
-@app.get("/api/v1/hospedes", response_model=EnvelopeResponse[List[HospedeSimpleSchema]], tags=["Hóspedes"])
-def listar_hospedes_para_selecao(
+# ---------------------------------------------------------------------------
+# ROTAS DO RF-001 & RF-002: GESTÃO COMPLETA DE HÓSPEDES
+# ---------------------------------------------------------------------------
+
+@app.get("/api/v1/hospedes", response_model=EnvelopeResponse[List[HospedeResponseSchema]], tags=["Hóspedes"])
+def listar_hospedes(
     termo: Optional[str] = Query(None, description="Buscar por nome ou CPF"),
+    status_filtro: Optional[int] = Query(None, alias="is_ativo", description="Filtrar por 1 (ativos) ou 0 (inativos)"),
     db: Session = Depends(get_db)
 ):
-    """Lista hóspedes ativos para o modal de seleção do Check-in."""
-    query = db.query(HospedeModel).filter(HospedeModel.is_ativo == 1)
+    """
+    Retorna a listagem de hóspedes do hotel com suporte a busca preditiva e filtro de status.
+    """
+    query = db.query(HospedeModel)
+    if status_filtro is not None:
+        query = query.filter(HospedeModel.is_ativo == status_filtro)
     if termo:
         t = f"%{termo.strip()}%"
-        query = query.filter(or_(HospedeModel.nome.ilike(t), HospedeModel.cpf.ilike(t)))
-    hospedes = query.order_by(HospedeModel.nome.asc()).limit(50).all()
+        query = query.filter(or_(HospedeModel.nome.ilike(t), HospedeModel.cpf.ilike(t), HospedeModel.email.ilike(t)))
+    
+    hospedes = query.order_by(HospedeModel.nome.asc()).all()
     return {
         "success": True,
         "data": hospedes,
+        "error": None
+    }
+
+@app.post("/api/v1/hospedes", response_model=EnvelopeResponse[HospedeResponseSchema], status_code=status.HTTP_201_CREATED, tags=["Hóspedes"])
+def cadastrar_hospede(
+    dados: HospedeCreateSchema,
+    request: Request,
+    operador: OperadorModel = Depends(obter_operador_autenticado),
+    db: Session = Depends(get_db)
+):
+    """
+    Cadastra um novo hóspede (RF-001) com validação de CPF Módulo 11 e e-mail único.
+    """
+    cpf_limpo = re.sub(r"\D", "", dados.cpf)
+    existente_cpf = db.query(HospedeModel).filter(HospedeModel.cpf == cpf_limpo).first()
+    if existente_cpf:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Já existe um hóspede cadastrado com o CPF {dados.cpf}."
+        )
+
+    existente_email = db.query(HospedeModel).filter(HospedeModel.email == dados.email.lower().strip()).first()
+    if existente_email:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"O e-mail {dados.email} já está em uso por outro hóspede."
+        )
+
+    novo_hospede = HospedeModel(
+        uuid_publico=str(uuid.uuid4()),
+        nome=dados.nome,
+        cpf=cpf_limpo,
+        email=dados.email.lower().strip(),
+        telefone=dados.telefone,
+        data_nascimento=dados.data_nascimento,
+        observacoes=dados.observacoes,
+        is_ativo=1
+    )
+    db.add(novo_hospede)
+    db.commit()
+    db.refresh(novo_hospede)
+
+    registrar_auditoria(
+        db=db,
+        operador_id=operador.id,
+        acao="CADASTRO_HOSPEDE",
+        tabela="tb_hospedes",
+        registro_id=novo_hospede.uuid_publico,
+        detalhes={"nome": novo_hospede.nome, "cpf": novo_hospede.cpf},
+        ip=request.client.host if request.client else None
+    )
+
+    return {
+        "success": True,
+        "data": novo_hospede,
+        "error": None
+    }
+
+@app.get("/api/v1/hospedes/{uuid_publico}", response_model=EnvelopeResponse[HospedeResponseSchema], tags=["Hóspedes"])
+def obter_detalhes_hospede(uuid_publico: str, db: Session = Depends(get_db)):
+    """Retorna a ficha cadastral completa de um hóspede específico."""
+    hospede = db.query(HospedeModel).filter(HospedeModel.uuid_publico == uuid_publico).first()
+    if not hospede:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hóspede não localizado.")
+    return {
+        "success": True,
+        "data": hospede,
+        "error": None
+    }
+
+@app.put("/api/v1/hospedes/{uuid_publico}", response_model=EnvelopeResponse[HospedeResponseSchema], tags=["Hóspedes"])
+def atualizar_hospede(
+    uuid_publico: str,
+    dados: HospedeUpdateSchema,
+    request: Request,
+    operador: OperadorModel = Depends(obter_operador_autenticado),
+    db: Session = Depends(get_db)
+):
+    """
+    Atualiza os dados cadastrais do hóspede (RF-002) com auditoria de modificações.
+    """
+    hospede = db.query(HospedeModel).filter(HospedeModel.uuid_publico == uuid_publico).first()
+    if not hospede:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hóspede não localizado.")
+
+    email_limpo = dados.email.lower().strip()
+    conflito = db.query(HospedeModel).filter(
+        HospedeModel.email == email_limpo,
+        HospedeModel.id != hospede.id
+    ).first()
+    if conflito:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Este e-mail já pertence a outro hóspede.")
+
+    hospede.nome = dados.nome
+    hospede.email = email_limpo
+    hospede.telefone = dados.telefone
+    hospede.observacoes = dados.observacoes
+    hospede.updated_at = datetime.utcnow()
+
+    db.commit()
+    db.refresh(hospede)
+
+    registrar_auditoria(
+        db=db,
+        operador_id=operador.id,
+        acao="ALTERACAO_HOSPEDE",
+        tabela="tb_hospedes",
+        registro_id=hospede.uuid_publico,
+        detalhes={"nome": hospede.nome, "email": hospede.email},
+        ip=request.client.host if request.client else None
+    )
+
+    return {
+        "success": True,
+        "data": hospede,
+        "error": None
+    }
+
+@app.patch("/api/v1/hospedes/{uuid_publico}/status", response_model=EnvelopeResponse[HospedeResponseSchema], tags=["Hóspedes"])
+def alternar_status_hospede(
+    uuid_publico: str,
+    dados: HospedeStatusSchema,
+    request: Request,
+    operador: OperadorModel = Depends(obter_operador_autenticado),
+    db: Session = Depends(get_db)
+):
+    """Alterna o status do hóspede entre ativo e inativo (Soft Delete)."""
+    hospede = db.query(HospedeModel).filter(HospedeModel.uuid_publico == uuid_publico).first()
+    if not hospede:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hóspede não localizado.")
+
+    hospede.is_ativo = dados.is_ativo
+    hospede.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(hospede)
+
+    registrar_auditoria(
+        db=db,
+        operador_id=operador.id,
+        acao="STATUS_HOSPEDE_ALTERADO",
+        tabela="tb_hospedes",
+        registro_id=hospede.uuid_publico,
+        detalhes={"novo_status": "ATIVO" if hospede.is_ativo == 1 else "INATIVO"},
+        ip=request.client.host if request.client else None
+    )
+
+    return {
+        "success": True,
+        "data": hospede,
+        "error": None
+    }
+
+# ---------------------------------------------------------------------------
+# ROTAS DO RF-003: GESTÃO DE OPERADORES & USUÁRIOS
+# ---------------------------------------------------------------------------
+
+@app.get("/api/v1/operadores", response_model=EnvelopeResponse[List[OperadorResponseSchema]], tags=["Operadores"])
+def listar_operadores(
+    db: Session = Depends(get_db)
+):
+    """
+    Lista todos os operadores cadastrados no sistema com indicação de status online.
+    """
+    operadores = db.query(OperadorModel).order_by(OperadorModel.nome.asc()).all()
+    agora = datetime.utcnow()
+
+    # Identificar operadores com sessões ativas nos últimos 30 minutos
+    sessoes_ativas = db.query(SessaoModel.id_operador).filter(
+        SessaoModel.is_active == 1,
+        SessaoModel.expires_at > agora
+    ).all()
+    ids_online = {s[0] for s in sessoes_ativas}
+
+    resultado = []
+    for op in operadores:
+        resultado.append({
+            "uuid_publico": op.uuid_publico,
+            "nome": op.nome,
+            "email": op.email,
+            "cargo": op.cargo,
+            "is_ativo": op.is_ativo,
+            "is_online": op.id in ids_online,
+            "created_at": op.created_at
+        })
+
+    return {
+        "success": True,
+        "data": resultado,
+        "error": None
+    }
+
+@app.post("/api/v1/operadores", response_model=EnvelopeResponse[OperadorResponseSchema], status_code=status.HTTP_201_CREATED, tags=["Operadores"])
+def cadastrar_operador(
+    dados: OperadorCreateSchema,
+    request: Request,
+    operador_logado: OperadorModel = Depends(obter_operador_autenticado),
+    db: Session = Depends(get_db)
+):
+    """
+    Cadastra um novo operador/usuário com senha Bcrypt de 12 rounds (RF-003).
+    """
+    if operador_logado.cargo not in ["ADMIN", "GERENTE"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Apenas administradores e gerentes podem cadastrar novos operadores."
+        )
+
+    email_limpo = dados.email.lower().strip()
+    existente = db.query(OperadorModel).filter(OperadorModel.email == email_limpo).first()
+    if existente:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Já existe um operador cadastrado com este e-mail corporativo."
+        )
+
+    novo_op = OperadorModel(
+        uuid_publico=str(uuid.uuid4()),
+        nome=dados.nome,
+        email=email_limpo,
+        senha_hash=gerar_hash_senha(dados.senha),
+        cargo=dados.cargo.value,
+        is_ativo=1
+    )
+    db.add(novo_op)
+    db.commit()
+    db.refresh(novo_op)
+
+    registrar_auditoria(
+        db=db,
+        operador_id=operador_logado.id,
+        acao="CADASTRO_OPERADOR",
+        tabela="tb_operadores",
+        registro_id=novo_op.uuid_publico,
+        detalhes={"nome": novo_op.nome, "email": novo_op.email, "cargo": novo_op.cargo},
+        ip=request.client.host if request.client else None
+    )
+
+    return {
+        "success": True,
+        "data": {
+            "uuid_publico": novo_op.uuid_publico,
+            "nome": novo_op.nome,
+            "email": novo_op.email,
+            "cargo": novo_op.cargo,
+            "is_ativo": novo_op.is_ativo,
+            "is_online": False,
+            "created_at": novo_op.created_at
+        },
+        "error": None
+    }
+
+@app.patch("/api/v1/operadores/{uuid_publico}/status", response_model=EnvelopeResponse[OperadorResponseSchema], tags=["Operadores"])
+def alternar_status_operador(
+    uuid_publico: str,
+    dados: OperadorStatusSchema,
+    request: Request,
+    operador_logado: OperadorModel = Depends(obter_operador_autenticado),
+    db: Session = Depends(get_db)
+):
+    """
+    Ativa ou desativa um operador (Soft Delete), impedindo auto-desativação do último ADMIN.
+    """
+    if operador_logado.cargo not in ["ADMIN", "GERENTE"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permissão negada. Apenas ADMIN ou GERENTE podem alterar o status de operadores."
+        )
+
+    op_alvo = db.query(OperadorModel).filter(OperadorModel.uuid_publico == uuid_publico).first()
+    if not op_alvo:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Operador não localizado.")
+
+    if op_alvo.id == operador_logado.id and dados.is_ativo == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Operação bloqueada: você não pode desativar seu próprio usuário logado."
+        )
+
+    op_alvo.is_ativo = dados.is_ativo
+    op_alvo.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(op_alvo)
+
+    registrar_auditoria(
+        db=db,
+        operador_id=operador_logado.id,
+        acao="STATUS_OPERADOR_ALTERADO",
+        tabela="tb_operadores",
+        registro_id=op_alvo.uuid_publico,
+        detalhes={"novo_status": "ATIVO" if op_alvo.is_ativo == 1 else "INATIVO"},
+        ip=request.client.host if request.client else None
+    )
+
+    return {
+        "success": True,
+        "data": {
+            "uuid_publico": op_alvo.uuid_publico,
+            "nome": op_alvo.nome,
+            "email": op_alvo.email,
+            "cargo": op_alvo.cargo,
+            "is_ativo": op_alvo.is_ativo,
+            "is_online": False,
+            "created_at": op_alvo.created_at
+        },
         "error": None
     }
 
