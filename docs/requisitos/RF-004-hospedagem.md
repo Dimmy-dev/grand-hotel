@@ -5,15 +5,14 @@
 
 ## 1. METADADOS DO PROJETO E DA EQUIPE
 
-### 1.1 Composição da Equipe (GRUPO-06 — SEMANA-05)
+### 1.1 Composição da Equipe (GRUPO-Dimitri — SEMANA-05)
 
 | ID | Nome Completo | Papel Primário | Papel Secundário | E-mail Institucional / Contato |
 | :---: | :--- | :--- | :--- | :--- |
-| 1 | **João Miguel Paiva Velloso Ramos Pereira** | Scrum Master | Desenvolvedor Back-End | `jguel0713@gmail.com` |
-| 2 | **João Victor Sousa da Conceição** | Desenvolvedor Front-End | QA / SecDevOps | `joao47064706@edu.df.senac.br` |
+| 1 | **Dimitri Lopes** | Dono do Projeto | Desenvolvedor Full-Stack | `dimitri61523796@edu.df.senac.br` |
 
 **Lista de Integrantes para o Moodle:**  
-`jguel0713@gmail.com; joao47064706@edu.df.senac.br`
+`dimitri61523796@edu.df.senac.br`
 
 ### 1.2 Identificação do Projeto
 

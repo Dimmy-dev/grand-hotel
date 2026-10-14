@@ -15,9 +15,9 @@
 | :---: | :--- | :--- | :--- | :--- |
 | **1** | **Dimitri Lopes** | Dono do projeto | Desenvolvedor | `dimitri61523796@edu.df.senac.br` |
 
-- **String Moodle:** `jguel0713@gmail.com; joao47064706@edu.df.senac.br`
+- **String Moodle:** `dimitri61523796@edu.df.senac.br`
 - **Requisito Entregue:** `RF-004` (Sistema de Hospedagem, Gestão de Acomodações, Check-in Ágil, Check-out com Faturamento e Rack Hoteleiro)
-- **Pacote de Entrega:** `GRUPO-06-SEMANA-05.zip` (ou `GRUPO-Dimitri-SEMANA-05.zip`)
+- **Pacote de Entrega:** `GRUPO-Dimitri-SEMANA-05.zip`
 
 ---
 
