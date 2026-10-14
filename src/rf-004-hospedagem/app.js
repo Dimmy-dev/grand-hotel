@@ -372,6 +372,7 @@
       quarto.hospedagem_ativa = {
         uuid_hospedagem: uuidHospedagem,
         hospede_nome: hospede.nome,
+        acompanhantes: acompanhantes || [],
         data_checkin: agora,
         data_prevista_checkout: data_prevista_checkout,
         tarifa_aplicada: Number(quarto.tarifa_base)
@@ -514,7 +515,11 @@
     checkinQuartoNum: document.getElementById('checkin-modal-quarto-num'),
     checkinQuartoUuid: document.getElementById('checkin-quarto-uuid'),
     checkinQuartoTarifa: document.getElementById('checkin-quarto-tarifa'),
+    checkinModalCapacidadeBadge: document.getElementById('checkin-modal-capacidade-badge'),
     checkinHospedeSelect: document.getElementById('checkin-hospede-select'),
+    checkinSegundoHospedeSelect: document.getElementById('checkin-segundo-hospede-select'),
+    groupSegundoHospede: document.getElementById('group-segundo-hospede'),
+    groupOutrosAcompanhantes: document.getElementById('group-outros-acompanhantes'),
     checkinDataSaida: document.getElementById('checkin-data-saida'),
     checkinAcompanhantes: document.getElementById('checkin-acompanhantes'),
     checkinObservacoes: document.getElementById('checkin-observacoes'),
@@ -969,11 +974,11 @@
         statusClasse = 'badge-disponivel';
         statusTexto = 'Disponível';
         acaoBtnHtml = `
-          <button class="btn-action btn-action-checkin" onclick="abrirModalCheckin('${quarto.uuid_publico}', '${quarto.numero}', ${quarto.tarifa_base})">
+          <button class="btn-action btn-action-checkin" onclick="abrirModalCheckin('${quarto.uuid_publico}', '${quarto.numero}', ${quarto.tarifa_base}, ${quarto.capacidade})">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>
             </svg>
-            Fazer Check-in
+            Fazer Check-in (${quarto.capacidade} vagas)
           </button>
         `;
       } else if (quarto.status === 'OCUPADO') {
@@ -1018,12 +1023,23 @@
 
       let hospedeInfoHtml = '';
       if (quarto.status === 'OCUPADO' && quarto.hospedagem_ativa) {
+        const hospNome = quarto.hospedagem_ativa.hospede_nome;
+        const acomp = quarto.hospedagem_ativa.acompanhantes || [];
+        let acompanhantesTexto = '';
+        if (acomp && acomp.length > 0) {
+          acompanhantesTexto = `
+            <div style="color: #1e3a8a; font-size: 0.77rem; margin-top: 3px; border-top: 1px dashed #bfdbfe; padding-top: 3px;">
+              👥 <strong>2º Hóspede / Acomp.:</strong> ${acomp.join(', ')}
+            </div>
+          `;
+        }
         hospedeInfoHtml = `
           <div style="margin-top: 10px; padding: 10px 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); font-size: 0.8rem;">
             <div style="font-weight: 600; color: #1e40af; margin-bottom: 2px;">
-              👤 ${quarto.hospedagem_ativa.hospede_nome}
+              👤 <strong>Titular:</strong> ${hospNome}
             </div>
-            <div style="color: #475569; font-size: 0.75rem;">
+            ${acompanhantesTexto}
+            <div style="color: #475569; font-size: 0.74rem; margin-top: 4px;">
               Entrada: ${formatarDataHora(quarto.hospedagem_ativa.data_checkin)}
             </div>
           </div>
@@ -1047,7 +1063,7 @@
             <div class="room-desc">${quarto.descricao || 'Acomodação executiva climatizada com enxoval completo.'}</div>
 
             <div class="room-specs">
-              <span>👥 Até ${quarto.capacidade} hóspede(s)</span>
+              <span>👥 Capacidade: Até ${quarto.capacidade} hóspede(s)</span>
               <span>🏷️ ${formatarMoeda(quarto.tarifa_base)}/dia</span>
             </div>
 
@@ -1065,11 +1081,19 @@
   }
 
   // Check-in Modal Logic
-  window.abrirModalCheckin = async function (uuidQuarto, numeroQuarto, tarifa) {
+  window.abrirModalCheckin = async function (uuidQuarto, numeroQuarto, tarifa, capacidade = 2) {
     dom.checkinQuartoUuid.value = uuidQuarto;
     dom.checkinQuartoNum.textContent = numeroQuarto;
     dom.checkinQuartoTarifa.value = tarifa;
     dom.checkinTarifaPreview.textContent = formatarMoeda(tarifa);
+
+    if (dom.checkinModalCapacidadeBadge) {
+      dom.checkinModalCapacidadeBadge.textContent = `Até ${capacidade} hóspede(s)`;
+    }
+
+    if (dom.groupSegundoHospede) {
+      dom.groupSegundoHospede.style.display = capacidade >= 2 ? 'block' : 'none';
+    }
 
     const amanha = new Date();
     amanha.setDate(amanha.getDate() + 1);
@@ -1079,16 +1103,30 @@
     dom.checkinDataSaida.value = localISOTime;
 
     dom.checkinHospedeSelect.innerHTML = '<option value="">Carregando catálogo de hóspedes...</option>';
+    if (dom.checkinSegundoHospedeSelect) {
+      dom.checkinSegundoHospedeSelect.innerHTML = '<option value="">Nenhum 2º hóspede (ocupação individual)</option>';
+    }
     dom.modalCheckin.classList.add('active');
 
     try {
       const hospedes = await apiFetch('/api/v1/hospedes?is_ativo=1');
-      dom.checkinHospedeSelect.innerHTML = '<option value="">Selecione o hóspede titular...</option>';
+      dom.checkinHospedeSelect.innerHTML = '<option value="">Selecione o 1º hóspede (titular)...</option>';
+      if (dom.checkinSegundoHospedeSelect) {
+        dom.checkinSegundoHospedeSelect.innerHTML = '<option value="">Nenhum 2º hóspede (ocupação individual)</option>';
+      }
+
       hospedes.forEach(h => {
-        const opt = document.createElement('option');
-        opt.value = h.uuid || h.uuid_publico;
-        opt.textContent = `${h.nome} (CPF: ${formatarCpf(h.cpf)})`;
-        dom.checkinHospedeSelect.appendChild(opt);
+        const opt1 = document.createElement('option');
+        opt1.value = h.uuid || h.uuid_publico;
+        opt1.textContent = `${h.nome} (CPF: ${formatarCpf(h.cpf)})`;
+        dom.checkinHospedeSelect.appendChild(opt1);
+
+        if (dom.checkinSegundoHospedeSelect && capacidade >= 2) {
+          const opt2 = document.createElement('option');
+          opt2.value = h.uuid || h.uuid_publico;
+          opt2.textContent = `${h.nome} (CPF: ${formatarCpf(h.cpf)})`;
+          dom.checkinSegundoHospedeSelect.appendChild(opt2);
+        }
       });
     } catch {
       dom.checkinHospedeSelect.innerHTML = '<option value="">Erro ao carregar hóspedes</option>';
@@ -1107,7 +1145,7 @@
     const observacoes = dom.checkinObservacoes.value.trim();
 
     if (!uuid_hospede) {
-      exibirToast('Selecione o hóspede titular para o check-in.', 'error');
+      exibirToast('Selecione o 1º hóspede (titular) para o check-in.', 'error');
       return;
     }
     if (!data_prevista_checkout) {
@@ -1115,7 +1153,33 @@
       return;
     }
 
-    const acompanhantes = acompanhantesStr ? acompanhantesStr.split(',').map(s => s.trim()) : [];
+    // Coleta do 2º hóspede e acompanhantes adicionais
+    const acompanhantes = [];
+    if (dom.checkinSegundoHospedeSelect && dom.checkinSegundoHospedeSelect.value) {
+      if (dom.checkinSegundoHospedeSelect.value === uuid_hospede) {
+        exibirToast('O 2º hóspede não pode ser a mesma pessoa do titular.', 'error');
+        return;
+      }
+      const opt = dom.checkinSegundoHospedeSelect.options[dom.checkinSegundoHospedeSelect.selectedIndex];
+      if (opt && opt.text) {
+        acompanhantes.push(opt.text);
+      }
+    }
+
+    if (acompanhantesStr) {
+      const extras = acompanhantesStr.split(',').map(s => s.trim()).filter(Boolean);
+      acompanhantes.push(...extras);
+    }
+
+    // Validação estrita de lotação máxima do quarto
+    const quarto = state.acomodacoes.find(q => q.uuid_publico === uuid_acomodacao);
+    const maxCapacidade = quarto ? quarto.capacidade : 2;
+    const totalPessoas = 1 + acompanhantes.length;
+
+    if (totalPessoas > maxCapacidade) {
+      exibirToast(`A capacidade deste quarto é de até ${maxCapacidade} hóspede(s). Você informou ${totalPessoas}.`, 'error');
+      return;
+    }
 
     try {
       await apiFetch('/api/v1/hospedagens/checkin', {
@@ -1129,7 +1193,11 @@
         })
       });
 
-      exibirToast('Check-in efetuado com sucesso! Quarto agora está OCUPADO.');
+      const msgHospedes = acompanhantes.length > 0 
+        ? `Check-in de 2 pessoas concluído com sucesso!` 
+        : `Check-in concluído com sucesso!`;
+
+      exibirToast(`${msgHospedes} Quarto agora está OCUPADO.`);
       fecharModalCheckin();
       carregarRack();
     } catch (err) {

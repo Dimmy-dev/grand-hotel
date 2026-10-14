@@ -345,9 +345,17 @@ def listar_todas_acomodacoes(
                 HospedagemModel.status == "ATIVA"
             ).first()
             if hosp_ativa and hosp_ativa.hospede:
+                acomp_lista = []
+                if hosp_ativa.acompanhantes_json:
+                    try:
+                        acomp_lista = json.loads(hosp_ativa.acompanhantes_json)
+                    except Exception:
+                        acomp_lista = [hosp_ativa.acompanhantes_json]
+
                 hospedagem_info = {
                     "uuid_hospedagem": hosp_ativa.uuid_publico,
                     "hospede_nome": hosp_ativa.hospede.nome,
+                    "acompanhantes": acomp_lista,
                     "data_checkin": hosp_ativa.data_checkin.isoformat(),
                     "data_prevista_checkout": hosp_ativa.data_prevista_checkout.isoformat(),
                     "tarifa_aplicada": float(hosp_ativa.tarifa_diaria_aplicada)
