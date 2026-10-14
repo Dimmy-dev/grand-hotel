@@ -976,12 +976,20 @@
         statusClasse = 'badge-disponivel';
         statusTexto = 'Disponível';
         acaoBtnHtml = `
-          <button class="btn-action btn-action-checkin" onclick="abrirModalCheckin('${quarto.uuid_publico}', '${quarto.numero}', ${quarto.tarifa_base}, ${quarto.capacidade})">
+          <button class="btn-action btn-action-checkin" style="width: 100%; justify-content: center; margin-bottom: 8px;" onclick="abrirModalCheckin('${quarto.uuid_publico}', '${quarto.numero}', ${quarto.tarifa_base}, ${quarto.capacidade})">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>
             </svg>
             Fazer Check-in (${quarto.capacidade} vagas)
           </button>
+          <div style="display: flex; gap: 6px;">
+            <button class="btn-gov-sm btn-action-limpar" style="flex: 1;" title="Enviar quarto para higienização e limpeza" onclick="alterarStatusQuarto('${quarto.uuid_publico}', '${quarto.numero}', 'LIMPEZA')">
+              🧹 Limpeza
+            </button>
+            <button class="btn-gov-sm btn-action-manutencao" style="flex: 1;" title="Colocar quarto em manutenção técnica" onclick="alterarStatusQuarto('${quarto.uuid_publico}', '${quarto.numero}', 'MANUTENCAO')">
+              🛠️ Manutenção
+            </button>
+          </div>
         `;
       } else if (quarto.status === 'OCUPADO') {
         statusClasse = 'badge-ocupado';
@@ -992,7 +1000,7 @@
         const tarifa = quarto.hospedagem_ativa ? quarto.hospedagem_ativa.tarifa_aplicada : quarto.tarifa_base;
 
         acaoBtnHtml = `
-          <button class="btn-action btn-action-checkout" onclick="abrirModalCheckout('${hospUuid}', '${quarto.numero}', '${hospNome}', '${dataCheckin}', ${tarifa})">
+          <button class="btn-action btn-action-checkout" style="width: 100%; justify-content: center;" onclick="abrirModalCheckout('${hospUuid}', '${quarto.numero}', '${hospNome}', '${dataCheckin}', ${tarifa})">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
             </svg>
@@ -1003,23 +1011,33 @@
         statusClasse = 'badge-limpeza';
         statusTexto = 'Limpeza';
         acaoBtnHtml = `
-          <button class="btn-action btn-action-limpar" onclick="liberarQuarto('${quarto.uuid_publico}', '${quarto.numero}')">
+          <button class="btn-action btn-action-limpar" style="width: 100%; justify-content: center; margin-bottom: 8px;" onclick="alterarStatusQuarto('${quarto.uuid_publico}', '${quarto.numero}', 'DISPONIVEL')">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="20 6 9 17 4 12"/>
             </svg>
-            Liberar Quarto
+            Liberar Quarto (Pronto)
           </button>
+          <div style="display: flex; gap: 6px;">
+            <button class="btn-gov-sm btn-action-manutencao" style="width: 100%;" title="Identificado defeito durante a limpeza" onclick="alterarStatusQuarto('${quarto.uuid_publico}', '${quarto.numero}', 'MANUTENCAO')">
+              🛠️ Requer Manutenção Técnica
+            </button>
+          </div>
         `;
       } else if (quarto.status === 'MANUTENCAO') {
         statusClasse = 'badge-manutencao';
         statusTexto = 'Manutenção';
         acaoBtnHtml = `
-          <button class="btn-action btn-action-limpar" onclick="liberarQuarto('${quarto.uuid_publico}', '${quarto.numero}')">
+          <button class="btn-action btn-action-manutencao" style="width: 100%; justify-content: center; margin-bottom: 8px;" onclick="alterarStatusQuarto('${quarto.uuid_publico}', '${quarto.numero}', 'DISPONIVEL')">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
             </svg>
-            Concluir Manutenção
+            Concluir Manutenção (Liberar)
           </button>
+          <div style="display: flex; gap: 6px;">
+            <button class="btn-gov-sm btn-action-limpar" style="width: 100%;" title="Enviar para higienização após obra/reparo" onclick="alterarStatusQuarto('${quarto.uuid_publico}', '${quarto.numero}', 'LIMPEZA')">
+              🧹 Enviar para Limpeza pós-reparo
+            </button>
+          </div>
         `;
       }
 
@@ -1285,21 +1303,38 @@
     }
   }
 
-  window.liberarQuarto = async function (uuidQuarto, numero) {
-    if (!confirm(`Confirma a liberação do Quarto ${numero} para DISPONÍVEL?`)) {
+  window.alterarStatusQuarto = async function (uuidQuarto, numero, novoStatus) {
+    const mensagensConfirmacao = {
+      LIMPEZA: `Deseja colocar o Quarto ${numero} em LIMPEZA/HIGIENIZAÇÃO?`,
+      MANUTENCAO: `Deseja colocar o Quarto ${numero} em MANUTENÇÃO técnica?`,
+      DISPONIVEL: `Confirma a liberação do Quarto ${numero} para DISPONÍVEL?`
+    };
+
+    const mensagensSucesso = {
+      LIMPEZA: `Quarto ${numero} colocado em LIMPEZA com sucesso!`,
+      MANUTENCAO: `Quarto ${numero} colocado em MANUTENÇÃO técnica!`,
+      DISPONIVEL: `Quarto ${numero} liberado e pronto para novas hospedagens!`
+    };
+
+    const pergunta = mensagensConfirmacao[novoStatus] || `Confirma alteração do Quarto ${numero} para ${novoStatus}?`;
+    if (!confirm(pergunta)) {
       return;
     }
 
     try {
       await apiFetch(`/api/v1/acomodacoes/${uuidQuarto}/status`, {
         method: 'PATCH',
-        body: JSON.stringify({ status: 'DISPONIVEL' })
+        body: JSON.stringify({ status: novoStatus })
       });
-      exibirToast(`Quarto ${numero} higienizado e liberado para venda imediata!`);
+      exibirToast(mensagensSucesso[novoStatus] || `Status do Quarto ${numero} atualizado com sucesso!`);
       carregarRack();
     } catch (err) {
       exibirToast(err.message, 'error');
     }
+  };
+
+  window.liberarQuarto = function (uuidQuarto, numero) {
+    return window.alterarStatusQuarto(uuidQuarto, numero, 'DISPONIVEL');
   };
 
   // --------------------------------------------------------------------------
