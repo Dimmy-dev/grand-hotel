@@ -13,8 +13,7 @@
 
 | ID | Integrante | Papel Primário | Papel Secundário | E-mail Institucional |
 | :---: | :--- | :--- | :--- | :--- |
-| **1** | **João Miguel Paiva Velloso Ramos Pereira** | Scrum Master | Desenvolvedor Back-End | `jguel0713@gmail.com` |
-| **2** | **João Victor Sousa da Conceição** | Desenvolvedor Front-End | QA / SecDevOps | `joao47064706@edu.df.senac.br` |
+| **1** | **Dimitri Lopes** | Dono do projeto | Desenvolvedor | `dimitri61523796@edu.df.senac.br` |
 
 - **String Moodle:** `jguel0713@gmail.com; joao47064706@edu.df.senac.br`
 - **Requisito Entregue:** `RF-003` (Gestão, Cadastro Seguro e Controle Hierárquico de Usuários do Sistema / Operadores)
